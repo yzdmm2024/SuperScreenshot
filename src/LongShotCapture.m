@@ -133,7 +133,7 @@ static LongShotCapture *_shared = nil;
         if (_skipStreak >= 5 && _lastMAD > 30.0f) {
             overlapPx = lastHpx * 0.25;   // v5.2：安全阀强制重叠从 35% 降到 25%，减少可见重复块
             confident = YES;
-            NSLog(@"[SN3] 安全阀：连续 %ld 帧未匹配但内容变化，强制保守重叠拼入", (long)_skipStreak);
+            NSLog(@"[SuperScreenshot] 安全阀：连续 %ld 帧未匹配但内容变化，强制保守重叠拼入", (long)_skipStreak);
         } else {
             return NO;
         }
@@ -143,12 +143,12 @@ static LongShotCapture *_shared = nil;
 
     // 整帧重合 / 几乎没滑动（重叠≥97%） → 丢弃，避免把同一屏刷多次
     if (overlapPx >= lastHpx * 0.97) {
-        NSLog(@"[SN3] 重叠 %.2f%%≈整帧，丢弃", overlapPx / lastHpx * 100.0);
+        NSLog(@"[SuperScreenshot] 重叠 %.2f%%≈整帧，丢弃", overlapPx / lastHpx * 100.0);
         return NO;
     }
     // 无重叠（重叠≤3%，接近整帧全新内容）→ 丢弃，防不连续跳屏
     if (overlapPx <= lastHpx * 0.03) {
-        NSLog(@"[SN3] 重叠 %.2f%%过低，丢弃", overlapPx / lastHpx * 100.0);
+        NSLog(@"[SuperScreenshot] 重叠 %.2f%%过低，丢弃", overlapPx / lastHpx * 100.0);
         return NO;
     }
 
@@ -198,12 +198,12 @@ static LongShotCapture *_shared = nil;
     CGFloat overlapPx = [self sadOverlapPxFromLast:last cur:frame confident:&confident];
     if (!confident) {
         overlapPx = lastHpx * 0.10;   // 手动模式默认极小重叠，宁可漏一点也不要重复
-        NSLog(@"[SN3] 手动帧 SAD 不可靠，按 10%% 保守重叠拼入");
+        NSLog(@"[SuperScreenshot] 手动帧 SAD 不可靠，按 10%% 保守重叠拼入");
     }
 
     // 几乎整帧重合（用户没滑）→ 丢弃
     if (overlapPx >= lastHpx * 0.97) {
-        NSLog(@"[SN3] 手动帧重叠 %.2f%%≈整帧，丢弃", overlapPx / lastHpx * 100.0);
+        NSLog(@"[SuperScreenshot] 手动帧重叠 %.2f%%≈整帧，丢弃", overlapPx / lastHpx * 100.0);
         return NO;
     }
     if (overlapPx <= lastHpx * 0.02) overlapPx = lastHpx * 0.02;
@@ -237,13 +237,13 @@ static LongShotCapture *_shared = nil;
     CGFloat ov = overlapPoints;
     if (ov < 2.0f) ov = 2.0f;                   // 极小重叠，防缝隙
     if (ov >= regionH * 0.97f) {                // 几乎整帧重合 = 没滚 = 重复
-        NSLog(@"[SN3] 精确帧重叠 %.1f%%≈整帧，丢弃", ov / regionH * 100.0);
+        NSLog(@"[SuperScreenshot] 精确帧重叠 %.1f%%≈整帧，丢弃", ov / regionH * 100.0);
         return NO;
     }
     [_frames addObject:frame];
     [_overlaps addObject:@(ov)];
     [self recomputeEstimatedHeight];
-    NSLog(@"[SN3] 精确帧：滚动增量=%.1fpt → 重叠=%.1fpt", regionH - overlapPoints, ov);
+    NSLog(@"[SuperScreenshot] 精确帧：滚动增量=%.1fpt → 重叠=%.1fpt", regionH - overlapPoints, ov);
     return YES;
 }
 
@@ -274,14 +274,14 @@ static LongShotCapture *_shared = nil;
     if (_frames.count == 0) { if (completion) completion(nil); return; }
     if (_frames.count == 1) { if (completion) completion(_frames.firstObject); return; }
 
-    NSLog(@"[SN3] 长截图开始拼接: 帧数=%lu, 估计高度=%.0fpt", (unsigned long)_frames.count, _estimatedHeight);
+    NSLog(@"[SuperScreenshot] 长截图开始拼接: 帧数=%lu, 估计高度=%.0fpt", (unsigned long)_frames.count, _estimatedHeight);
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         UIImage *result = [self stitchSync];
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result) {
-                NSLog(@"[SN3] 长截图拼接完成: 输出=%lux%lu", (unsigned long)result.size.width, (unsigned long)result.size.height);
+                NSLog(@"[SuperScreenshot] 长截图拼接完成: 输出=%lux%lu", (unsigned long)result.size.width, (unsigned long)result.size.height);
             } else {
-                NSLog(@"[SN3] 长截图拼接失败");
+                NSLog(@"[SuperScreenshot] 长截图拼接失败");
             }
             if (completion) completion(result);
         });
@@ -358,7 +358,7 @@ static LongShotCapture *_shared = nil;
         // 分辨率已按 s 缩进画布，故直接以 scale=1 输出（点尺寸=像素尺寸）
         return [UIImage imageWithCGImage:outCG scale:1.0 orientation:UIImageOrientationUp];
     } @catch (NSException *e) {
-        NSLog(@"[SN3] stitch exception: %@ %@", e.name, e.reason);
+        NSLog(@"[SuperScreenshot] stitch exception: %@ %@", e.name, e.reason);
         return [self simpleConcat:_frames];
     }
 }
@@ -474,7 +474,7 @@ static CGFloat blockMAD(const unsigned char *a, NSInteger hA,
     CGFloat lastHpx = (CGFloat)CGImageGetHeight(last.CGImage);
     CGFloat overlapPx = (CGFloat)bestO / (CGFloat)hL * lastHpx;   // 降采样行占比 → 真实像素
     if (confident) *confident = YES;
-    NSLog(@"[SN3] SAD 接缝 o=%.0f/%.0f mad=%.1f ref=%.1f → overlap=%.1fpx",
+    NSLog(@"[SuperScreenshot] SAD 接缝 o=%.0f/%.0f mad=%.1f ref=%.1f → overlap=%.1fpx",
           (CGFloat)bestO, (CGFloat)maxO, bestMAD, refMAD, overlapPx);
     return overlapPx;
 }

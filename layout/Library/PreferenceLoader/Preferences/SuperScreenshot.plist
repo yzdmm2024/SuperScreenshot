@@ -5,15 +5,15 @@
 	<key>entry</key>
 	<dict>
 		<key>bundle</key>
-		<string>Snapper3ZhExtPrefs</string>
+		<string>SuperScreenshotPrefs</string>
 		<key>cell</key>
 		<string>PSLinkCell</string>
 		<key>detail</key>
-		<string>SN3PrefsController</string>
+		<string>SuperScreenshotPrefsController</string>
 		<key>isController</key>
 		<true/>
 		<key>icon</key>
-			<string>Snapper3ZhExtPrefs.bundle/icon.png</string>
+			<string>SuperScreenshotPrefs.bundle/icon.png</string>
 			<key>label</key>
 			<string>超级截图</string>
 	</dict>

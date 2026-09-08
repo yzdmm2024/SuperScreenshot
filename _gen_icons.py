@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from PIL import Image, ImageDraw
 
-BUNDLE = r"C:\Users\10131\Desktop\我自己写的插件\超级截图\SN3extension\layout\Library\ControlCenter\Bundles\SN3CCModule.bundle"
+BUNDLE = r"C:\Users\10131\Desktop\我自己写的插件\超级截图\SuperScreenshot\layout\Library\ControlCenter\Bundles\SuperScreenshotCCModule.bundle"
 WHITE = (255, 255, 255, 255)
 TRANS = (0, 0, 0, 0)
 

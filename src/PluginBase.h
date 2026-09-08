@@ -1,8 +1,8 @@
 //
-//  PluginBase.h  — Snapper3 插件基类
+//  PluginBase.h  — SuperScreenshot 插件基类
 //
-//  实现了 Snapper3Plugin 协议里 Snapper3 会调用的全部关键 selector。
-//  Snapper3PluginManager 在截图动作菜单里把插件列为动作，触发时把裁剪后的
+//  实现了 SuperScreenshotPlugin 协议里 SuperScreenshot 会调用的全部关键 selector。
+//  SuperScreenshotPluginManager 在截图动作菜单里把插件列为动作，触发时把裁剪后的
 //  图片 + 选区矩形交给插件，子类在 runWithImage: 里实现真正的功能。
 //
 #import <UIKit/UIKit.h>

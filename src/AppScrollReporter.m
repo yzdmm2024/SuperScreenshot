@@ -3,7 +3,7 @@
 //
 //  原理（方案 A：自动滚动，用户完全不用手动滑）：
 //    SpringBoard 长截图「自动滚动」模式点【开始采集】时 notify_post(arm)，并把采集区域
-//    高度(点)写入 notify 状态 SN3_LS_REGIONH。本类收到 arm 后：
+//    高度(点)写入 notify 状态 SuperScreenshot_LS_REGIONH。本类收到 arm 后：
 //      1. 在 keyWindow 视图树里找 contentSize 最大的 UIScrollView（聊天消息列表）；
 //      2. 先把当前屏作为第 1 帧：write offset、notify_post(capture)；
 //      3. 启动定时循环：每次把 scrollView 的 contentOffset 向下推「约一屏高×90%（快速 94%）」
@@ -25,7 +25,7 @@
 
 #include <notify.h>
 #import "AppScrollReporter.h"
-#import "SN3Notify.h"
+#import "SuperScreenshotNotify.h"
 #import "Common.h"
 
 static AppScrollReporter *g_inst = nil;
@@ -48,15 +48,15 @@ static int g_armTok = 0, g_disarmTok = 0, g_offsetTok = 0, g_regionTok = 0, g_do
 }
 
 + (void)setup {
-    notify_register_dispatch(SN3_LS_ARM, &g_armTok, dispatch_get_main_queue(), ^(int t) {
+    notify_register_dispatch(SuperScreenshot_LS_ARM, &g_armTok, dispatch_get_main_queue(), ^(int t) {
         [[AppScrollReporter shared] arm];
     });
-    notify_register_dispatch(SN3_LS_DISARM, &g_disarmTok, dispatch_get_main_queue(), ^(int t) {
+    notify_register_dispatch(SuperScreenshot_LS_DISARM, &g_disarmTok, dispatch_get_main_queue(), ^(int t) {
         [[AppScrollReporter shared] disarm];
     });
-    notify_register_check(SN3_LS_OFFSET, &g_offsetTok);
-    notify_register_check(SN3_LS_REGIONH, &g_regionTok);
-    NSLog(@"[SN3] AppScrollReporter registered (arm/disarm/offset/regionh)");
+    notify_register_check(SuperScreenshot_LS_OFFSET, &g_offsetTok);
+    notify_register_check(SuperScreenshot_LS_REGIONH, &g_regionTok);
+    NSLog(@"[SuperScreenshot] AppScrollReporter registered (arm/disarm/offset/regionh)");
 }
 
 // 在视图树里找 contentSize 最高的可见 UIScrollView（聊天消息列表通常是最大的那个）
@@ -95,7 +95,7 @@ static int g_armTok = 0, g_disarmTok = 0, g_offsetTok = 0, g_regionTok = 0, g_do
     [self disarm];                 // 先清掉残留
     _sv = [self findMainScrollView];
     if (!_sv) {
-        NSLog(@"[SN3] app: 未找到可滚动视图，自动滚动无效（SB 看门狗将回退 SAD）");
+        NSLog(@"[SuperScreenshot] app: 未找到可滚动视图，自动滚动无效（SB 看门狗将回退 SAD）");
         return;
     }
     uint64_t rh = 0;
@@ -123,7 +123,7 @@ static int g_armTok = 0, g_disarmTok = 0, g_offsetTok = 0, g_regionTok = 0, g_do
                                            selector:@selector(tick)
                                            userInfo:nil
                                             repeats:YES];
-    NSLog(@"[SN3] app: 自动滚动开始(quick=%d), regionH=%.0f, contentSize=%.0f, maxY=%.0f",
+    NSLog(@"[SuperScreenshot] app: 自动滚动开始(quick=%d), regionH=%.0f, contentSize=%.0f, maxY=%.0f",
           quick, _regionH, _sv.contentSize.height, [self maxOffsetY]);
 }
 
@@ -131,7 +131,7 @@ static int g_armTok = 0, g_disarmTok = 0, g_offsetTok = 0, g_regionTok = 0, g_do
     _armed = NO;
     [_timer invalidate]; _timer = nil;
     _sv = nil;
-    NSLog(@"[SN3] app: 自动滚动已停止");
+    NSLog(@"[SuperScreenshot] app: 自动滚动已停止");
 }
 
 // 把 scrollView 向下推「约一屏高 × _stepRatio」；返回实际滚动增量（点）
@@ -174,14 +174,14 @@ static int g_armTok = 0, g_disarmTok = 0, g_offsetTok = 0, g_regionTok = 0, g_do
     _armed = NO;
     [_timer invalidate]; _timer = nil;
     _sv = nil;
-    notify_post(SN3_LS_DONE);          // 通知 SB：自动采集结束，可拼接/保存
-    NSLog(@"[SN3] app: 自动滚动采集完成（已到底）");
+    notify_post(SuperScreenshot_LS_DONE);          // 通知 SB：自动采集结束，可拼接/保存
+    NSLog(@"[SuperScreenshot] app: 自动滚动采集完成（已到底）");
 }
 
 - (void)sendCaptureAt:(CGFloat)offset {
     uint64_t enc = (uint64_t)(round(offset * 100.0));
     notify_set_state(g_offsetTok, enc);     // 写精确偏移（点*100），SB 读取
-    notify_post(SN3_LS_CAPTURE);            // 触发 SB 抓当前屏
+    notify_post(SuperScreenshot_LS_CAPTURE);            // 触发 SB 抓当前屏
 }
 
 @end

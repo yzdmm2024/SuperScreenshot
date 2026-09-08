@@ -1,5 +1,5 @@
 //
-//  ZhOCRPlugin.m — 注册进 Snapper3 动作菜单的“OCR”项，使用本地 Vision 中文识别
+//  ZhOCRPlugin.m — 注册进 SuperScreenshot 动作菜单的“OCR”项，使用本地 Vision 中文识别
 //
 #import "ZhOCRPlugin.h"
 #import "VisionOCR.h"

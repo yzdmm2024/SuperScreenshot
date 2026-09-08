@@ -45,7 +45,7 @@
     if (!payload) { if (completion) completion(nil, @"AI 请求构造失败"); return; }
     [req setHTTPBody:payload];
 
-    NSLog(@"[SN3] AI 请求 → %@ model=%@", u, model);
+    NSLog(@"[SuperScreenshot] AI 请求 → %@ model=%@", u, model);
 
     NSURLSession *session = [NSURLSession sharedSession];
     [[session dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {

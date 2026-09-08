@@ -7,13 +7,13 @@
     <key>CFBundleDisplayName</key>
     <string>超级截图</string>
     <key>CFBundleExecutable</key>
-    <string>SN3CCModule</string>
+    <string>SuperScreenshotCCModule</string>
     <key>CFBundleIdentifier</key>
-    <string>com.axs.snapper3zhext.ccmodule</string>
+    <string>com.axs.superscreenshot.ccmodule</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>SN3CCModule</string>
+    <string>SuperScreenshotCCModule</string>
     <key>CFBundlePackageType</key>
     <string>BNDL</string>
     <key>CFBundleShortVersionString</key>
@@ -23,7 +23,7 @@
     <key>MinimumOSVersion</key>
     <string>14.0</string>
     <key>NSPrincipalClass</key>
-    <string>SN3CCModule</string>
+    <string>SuperScreenshotCCModule</string>
     <key>CCSModuleSize</key>
     <dict>
         <key>Portrait</key>

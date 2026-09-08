@@ -3,16 +3,16 @@
 //
 //  ────────────────────────────────────────────────────────────────────────
 //  触发链：
-//    控制中心「超级截图」按钮 (SN3CCModule，靠 CCSupport 加载)
-//        └─ 先收起控制中心（见 SN3CCModule.setSelected:）
-//        └─ 发 darwin 通知 com.axs.snapper3zhext.cc.capture
+//    控制中心「超级截图」按钮 (SuperScreenshotCCModule，靠 CCSupport 加载)
+//        └─ 先收起控制中心（见 SuperScreenshotCCModule.setSelected:）
+//        └─ 发 darwin 通知 com.axs.superscreenshot.cc.capture
 //            └─> 本文件收到 → [MaskCropWindow.sharedInstance show]   ← 窗口A
 //                    ├─ 正常截图 → 抓屏裁剪 → 销毁A → [EditToolbarWindow showWithImage:] ← 窗口B
 //                    └─ 长截图   → 双标尺调节 → 分段抓帧 → 拼接 → 销毁A → 窗口B
 //
 //  进程分流：SpringBoard 注册与响应；QQ/微信仅注册 AppScrollReporter（自动滚动驱动）。
 //
-//  注入范围：layout/.../Snapper3ZhExt.plist 的 Filter 写 com.apple.springboard（主逻辑）
+//  注入范围：layout/.../SuperScreenshot.plist 的 Filter 写 com.apple.springboard（主逻辑）
 //    + com.tencent.mqq / com.tencent.xin（v5.8 自动滚动长截图：驱动 UIScrollView 上报精确偏移）。
 //    仍不要加 "*"——只注入必要的聊天 App，避免拖慢启动 / 触发安全模式。
 //  ────────────────────────────────────────────────────────────────────────
@@ -24,9 +24,9 @@
 #import "Common.h"
 #import "MaskCropWindow.h"
 #import "EditToolbarWindow.h"
-#import "SN3Notify.h"
+#import "SuperScreenshotNotify.h"
 #import "AppScrollReporter.h"
-#import "SN3License.h"
+#import "SuperScreenshotLicense.h"
 
 // 控制中心点按 → 拉起窗口A（遮罩镂空框选）
 static void xz_ccCapture(CFNotificationCenterRef center, void *observer,
@@ -39,21 +39,21 @@ static void xz_ccCapture(CFNotificationCenterRef center, void *observer,
         @try {
             // 总开关（设置面板第一项，默认开）
             if (![Common boolPref:XZ_KEY_MENU_ENABLED default:YES]) {
-                NSLog(@"[SN3] disabled by pref");
+                NSLog(@"[SuperScreenshot] disabled by pref");
                 return;
             }
             // v6.20.2：设备授权验证（UDID 解锁码）。未解锁时，控制中心路径只给「非阻塞提示横幅」
             // 并直接退出本次截图动作 —— 绝不在这里弹模态验证框（SpringBoard 弹模态曾反复冻结手机）。
             // 真正的验证弹窗只在「设置 › 超级截图 › 设备授权」里（普通 App 进程，安全且可取消）。
-            if (![SN3License isUnlocked]) {
-                NSLog(@"[SN3] 未授权设备 -> 非阻塞提示，本次截图已退出（请到 设置›超级截图›设备授权 验证）");
-                [SN3License presentUnlockHint];
+            if (![SuperScreenshotLicense isUnlocked]) {
+                NSLog(@"[SuperScreenshot] 未授权设备 -> 非阻塞提示，本次截图已退出（请到 设置›超级截图›设备授权 验证）");
+                [SuperScreenshotLicense presentUnlockHint];
                 return;
             }
-            NSLog(@"[SN3] CC tapped -> show mask crop window (A)");
+            NSLog(@"[SuperScreenshot] CC tapped -> show mask crop window (A)");
             [[MaskCropWindow sharedInstance] show];
         } @catch (NSException *e) {
-            NSLog(@"[SN3] show mask failed: %@ %@", e.name, e.reason);
+            NSLog(@"[SuperScreenshot] show mask failed: %@ %@", e.name, e.reason);
         }
     });
 }
@@ -63,19 +63,19 @@ __attribute__((constructor)) static void xz_ctor() {
     @autoreleasepool {
         NSString *procName = [NSProcessInfo processInfo].processName;
         if ([procName isEqualToString:@"SpringBoard"]) {
-            NSLog(@"[SN3] 超级截图 v5.8 loaded in SpringBoard");
+            NSLog(@"[SuperScreenshot] 超级截图 v5.8 loaded in SpringBoard");
             dispatch_async(dispatch_get_main_queue(), ^{
                 @try {
                     CFNotificationCenterAddObserver(
                         CFNotificationCenterGetDarwinNotifyCenter(),
                         NULL,
                         &xz_ccCapture,
-                        CFSTR("com.axs.snapper3zhext.cc.capture"),
+                        CFSTR("com.axs.superscreenshot.cc.capture"),
                         NULL,
                         CFNotificationSuspensionBehaviorDeliverImmediately
                     );
                 } @catch (NSException *e) {
-                    NSLog(@"[SN3] init failed: %@ %@", e.name, e.reason);
+                    NSLog(@"[SuperScreenshot] init failed: %@ %@", e.name, e.reason);
                 }
             });
         } else {
@@ -84,7 +84,7 @@ __attribute__((constructor)) static void xz_ctor() {
             if ([bid isEqualToString:@"com.tencent.mqq"] ||
                 [bid isEqualToString:@"com.tencent.xin"]) {
                 [AppScrollReporter setup];
-                NSLog(@"[SN3] v5.8 AppScrollReporter enabled in %@", bid);
+                NSLog(@"[SuperScreenshot] v5.8 AppScrollReporter enabled in %@", bid);
             }
         }
     }
@@ -92,6 +92,6 @@ __attribute__((constructor)) static void xz_ctor() {
 
 // ────────────────────────────────────────────────────────────────────────
 // v6.18：已移除「音量+电源键触发超级截图」拦截（实验性不稳定，按用户要求移除）。
-//        触发超级截图现仅剩：控制中心按钮（SN3CCModule 发 darwin 通知）。
+//        触发超级截图现仅剩：控制中心按钮（SuperScreenshotCCModule 发 darwin 通知）。
 // ────────────────────────────────────────────────────────────────────────
 

@@ -6,7 +6,7 @@
 
 @implementation PluginBase
 
-#pragma mark - 供 Snapper3 调用的协议方法
+#pragma mark - 供 SuperScreenshot 调用的协议方法
 
 - (NSString *)pluginIdentifier { return @""; }
 
@@ -16,7 +16,7 @@
 - (void)setUrlSchemeForPlugin:(NSString *)s { }
 - (UIImage *)imageForMenuAndSettings { return [Common systemIcon:@"doc.text.viewfinder"]; }
 
-// Snapper3 触发插件：选区 + 整张图 + 完成回调
+// SuperScreenshot 触发插件：选区 + 整张图 + 完成回调
 - (void)wantsToSnapRect:(CGRect)rect inImage:(UIImage *)image thenDoPlugin:(void (^)(void))completion {
     [self deliverImage:image];
     if (completion) completion();
@@ -36,7 +36,7 @@
     if (self.latestSnapImage) [self deliverImage:self.latestSnapImage];
 }
 
-// 其它 Snapper3 可能调用的生命周期/设置方法
+// 其它 SuperScreenshot 可能调用的生命周期/设置方法
 - (void)snapSentToApplication { }
 - (void)snapWillSave { }
 - (void)snapChanged { }

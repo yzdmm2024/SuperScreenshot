@@ -25,7 +25,7 @@
         UIImage *img = getScreenImage();
         // v4.4：必须校验是「全屏、有效」的图，否则退化回退会截到 SpringBoard 小窗 → 白底/裁区无效。
         if ([self isFullScreenImage:img]) return img;
-        NSLog(@"[SN3] UIGetScreenImage returned degenerate image (%.0fx%.0f), fallback",
+        NSLog(@"[SuperScreenshot] UIGetScreenImage returned degenerate image (%.0fx%.0f), fallback",
               img ? img.size.width : 0, img ? img.size.height : 0);
     }
 
@@ -93,7 +93,7 @@
         UIGraphicsEndImageContext();
         return img;
     } @catch (NSException *e) {
-        NSLog(@"[SN3] captureFromWindows exception: %@ %@", e.name, e.reason);
+        NSLog(@"[SuperScreenshot] captureFromWindows exception: %@ %@", e.name, e.reason);
         return nil;
     }
 }
@@ -162,7 +162,7 @@
 
     CGRect r = [self imageRectForScreenRect:screenRect image:image];
     if (r.size.width < 4 || r.size.height < 4) {
-        NSLog(@"[SN3] crop failed: screenRect=(%.1f,%.1f,%.1f,%.1f) imgSize=(%.0f,%.0f) CGImage=(%.0f,%.0f) outRect=(%.0f,%.0f,%.0f,%.0f)",
+        NSLog(@"[SuperScreenshot] crop failed: screenRect=(%.1f,%.1f,%.1f,%.1f) imgSize=(%.0f,%.0f) CGImage=(%.0f,%.0f) outRect=(%.0f,%.0f,%.0f,%.0f)",
               screenRect.origin.x, screenRect.origin.y,
               screenRect.size.width, screenRect.size.height,
               image.size.width, image.size.height,
@@ -297,7 +297,7 @@
         NSString *name = [caseId substringFromIndex:7];
         UIImage *out = [self applyCustomPhoneFrame:image customName:name];
         if (out) return out;
-        NSLog(@"[SN3] custom frame '%@' load failed, fallback to original", name);
+        NSLog(@"[SuperScreenshot] custom frame '%@' load failed, fallback to original", name);
         return image;
     }
 
@@ -364,7 +364,7 @@
 }
 
 // v6.06：自定义机框 —— 用户用 Filza 把机框 PNG + info.json 放进
-//   /var/mobile/Documents/com.axs.snapper3zhext/Frames/<名称>/
+//   /var/mobile/Documents/com.axs.superscreenshot/Frames/<名称>/
 // info.json 结构（坐标单位 = frame.png 的像素，推荐导出 1x 或 2x；iOS 加载 data 默认 scale=1）：
 //   {
 //     "screen":    {"x":60,"y":60,"width":1080,"height":2340},  // 截图在机框 PNG 里的位置/尺寸
@@ -380,21 +380,21 @@
     NSString *infoPath  = [dir stringByAppendingPathComponent:@"info.json"];
 
     NSData *frameData = [NSData dataWithContentsOfFile:framePath];
-    if (!frameData) { NSLog(@"[SN3] custom frame missing png: %@", framePath); return nil; }
+    if (!frameData) { NSLog(@"[SuperScreenshot] custom frame missing png: %@", framePath); return nil; }
     UIImage *frame = [UIImage imageWithData:frameData];
-    if (!frame || !frame.CGImage) { NSLog(@"[SN3] custom frame bad png: %@", framePath); return nil; }
+    if (!frame || !frame.CGImage) { NSLog(@"[SuperScreenshot] custom frame bad png: %@", framePath); return nil; }
 
     NSData *infoData = [NSData dataWithContentsOfFile:infoPath];
-    if (!infoData) { NSLog(@"[SN3] custom frame missing info.json: %@", infoPath); return nil; }
+    if (!infoData) { NSLog(@"[SuperScreenshot] custom frame missing info.json: %@", infoPath); return nil; }
     NSError *je = nil;
     NSDictionary *info = [NSJSONSerialization JSONObjectWithData:infoData options:0 error:&je];
-    if (!info || je) { NSLog(@"[SN3] custom frame info.json parse err: %@", je.localizedDescription); return nil; }
+    if (!info || je) { NSLog(@"[SuperScreenshot] custom frame info.json parse err: %@", je.localizedDescription); return nil; }
 
     NSDictionary *sc = info[@"screen"];
-    if (!sc || ![sc isKindOfClass:[NSDictionary class]]) { NSLog(@"[SN3] custom frame info.json 缺 screen"); return nil; }
+    if (!sc || ![sc isKindOfClass:[NSDictionary class]]) { NSLog(@"[SuperScreenshot] custom frame info.json 缺 screen"); return nil; }
     CGFloat sx = [sc[@"x"] floatValue], sy = [sc[@"y"] floatValue];
     CGFloat sw = [sc[@"width"] floatValue], sh = [sc[@"height"] floatValue];
-    if (sw <= 0 || sh <= 0) { NSLog(@"[SN3] custom frame screen 尺寸非法"); return nil; }
+    if (sw <= 0 || sh <= 0) { NSLog(@"[SuperScreenshot] custom frame screen 尺寸非法"); return nil; }
     CGFloat radius = [info[@"radius"] floatValue];          // 0 = 不圆角
 
     CGFloat scale = frame.scale > 0 ? frame.scale : 1.0;

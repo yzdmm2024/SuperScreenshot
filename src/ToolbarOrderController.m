@@ -11,7 +11,7 @@
 #import "ToolbarOrderController.h"
 
 // 与 EditToolbarWindow 所用的偏好域 / 键 完全一致（rootless 越狱，写在默认域）
-#define kDomain      @"com.axs.snapper3zhext"
+#define kDomain      @"com.axs.superscreenshot"
 #define kOrderKey    @"Toolbar_Order"     // 逗号分隔的 tag 顺序
 #define kDisabledKey @"Toolbar_Disabled"  // 逗号分隔的 禁用 tag
 
@@ -29,14 +29,14 @@ static NSDictionary<NSNumber *, NSString *> *kTagNames(void) {
     };
 }
 
-@interface SN3ToolbarOrderController () <UITableViewDataSource, UITableViewDelegate>
+@interface SuperScreenshotToolbarOrderController () <UITableViewDataSource, UITableViewDelegate>
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *order;     // 完整有序 tag 列表
 @property (nonatomic, strong) NSMutableSet<NSNumber *>   *disabled; // 被禁用的 tag
 @property (nonatomic, strong) UITableView *tv;
 @property (nonatomic, strong) UILabel *tip;
 @end
 
-@implementation SN3ToolbarOrderController
+@implementation SuperScreenshotToolbarOrderController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -125,7 +125,7 @@ static NSDictionary<NSNumber *, NSString *> *kTagNames(void) {
     [d synchronize];
     // 通知 tweak 进程重新读取偏好
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
-                                         (CFStringRef)@"com.axs.snapper3zhext.prefsChanged",
+                                         (CFStringRef)@"com.axs.superscreenshot.prefsChanged",
                                          NULL, NULL, YES);
 }
 
@@ -136,8 +136,8 @@ static NSDictionary<NSNumber *, NSString *> *kTagNames(void) {
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)ip {
-    UITableViewCell *c = [tv dequeueReusableCellWithIdentifier:@"sn3row"];
-    if (!c) c = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"sn3row"];
+    UITableViewCell *c = [tv dequeueReusableCellWithIdentifier:@"superscreenshotrow"];
+    if (!c) c = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"superscreenshotrow"];
     NSNumber *t = _order[ip.row];
 
     // v6.06：行文字显示「已自定义的名称」，否则用默认名
@@ -197,7 +197,7 @@ static NSDictionary<NSNumber *, NSString *> *kTagNames(void) {
         if (ic.length) [dd setObject:ic forKey:kIc]; else [dd removeObjectForKey:kIc];
         [dd synchronize];
         CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
-                                             (CFStringRef)@"com.axs.snapper3zhext.prefsChanged", NULL, NULL, YES);
+                                             (CFStringRef)@"com.axs.superscreenshot.prefsChanged", NULL, NULL, YES);
         // 刷新本行（显示最新自定义名）
         NSUInteger idx = [_order indexOfObject:tag];
         if (idx != NSNotFound) {

@@ -82,7 +82,7 @@ static EditToolbarWindow *_shared = nil;
 #pragma mark - 生命周期
 
 + (void)showWithImage:(UIImage *)image {
-    if (!image) { NSLog(@"[SN3] EditToolbarWindow: nil image"); return; }
+    if (!image) { NSLog(@"[SuperScreenshot] EditToolbarWindow: nil image"); return; }
     if (_shared) [_shared destroyWindow];     // 重入先销毁，避免叠加
 
     EditToolbarWindow *w = [[EditToolbarWindow alloc] init];
@@ -109,7 +109,7 @@ static EditToolbarWindow *_shared = nil;
     _imageView = nil;
     _toolbar = nil;
     _sizeLabel = nil;
-    NSLog(@"[SN3] edit window B destroyed");
+    NSLog(@"[SuperScreenshot] edit window B destroyed");
 }
 
 #pragma mark - 工具栏布局计算（installToolbar / buildWindowWithImage 共用）
@@ -202,7 +202,7 @@ static EditToolbarWindow *_shared = nil;
 
     [self installToolbar];
     _win.hidden = NO;
-    NSLog(@"[SN3] edit window B shown, image=%.0fx%.0f", image.size.width, image.size.height);
+    NSLog(@"[SuperScreenshot] edit window B shown, image=%.0fx%.0f", image.size.width, image.size.height);
 }
 
 - (void)onClose {
@@ -357,7 +357,7 @@ static EditToolbarWindow *_shared = nil;
     @try {
         [self _toolTappedInner:btn];
     } @catch (NSException *e) {
-        NSLog(@"[SN3] toolTapped 异常 tag=%ld: %@ / %@ / %@",
+        NSLog(@"[SuperScreenshot] toolTapped 异常 tag=%ld: %@ / %@ / %@",
               (long)btn.tag, e.name, e.reason, e.callStackSymbols);
         [Common toast:[NSString stringWithFormat:@"操作失败：%@", e.reason ?: e.name]];
     }
@@ -456,7 +456,7 @@ static EditToolbarWindow *_shared = nil;
 }
 
 - (void)launchAppWithImage:(UIImage *)img {
-    NSArray<NSDictionary *> *apps = [SuperTools sn3LaunchApps];
+    NSArray<NSDictionary *> *apps = [SuperTools superscreenshotLaunchApps];
     if (apps.count == 0) {
         [Common toast:@"请先到设置 → 快捷启动 里添加 App"];
         return;

@@ -33,7 +33,7 @@
 #import "HistoryWindow.h"
 #include <math.h>
 #include <notify.h>
-#import "SN3Notify.h"
+#import "SuperScreenshotNotify.h"
 
 // ---------- 布局常量（pt） ----------
 static const CGFloat kButtonH  = 46.0;   // 按钮高
@@ -73,7 +73,7 @@ static const CGFloat kHandleHit = 30.0;   // 手柄命中半边长（pt）——
 @end
 
 // v5.21: 单排滑动循环用的 KVO context
-static int SN3_LoopKVOContext = 0;
+static int SuperScreenshot_LoopKVOContext = 0;
 
 @implementation MaskCropWindow {
     XZPassThroughWindow *_win;      // 窗口A（可穿透）
@@ -243,7 +243,7 @@ static int SN3_LoopKVOContext = 0;
 
     _win.hidden = NO;
     // v6.21：呼出截图时的一次性引导 toast 已取消（用户反馈不需要）
-    NSLog(@"[SN3] mask window A shown (v4.8)");
+    NSLog(@"[SuperScreenshot] mask window A shown (v4.8)");
 }
 
 // v5.19：允许 pan 与 pinch 同时识别 —— 单指走 pan（拖框/拉角），双指走 pinch（缩放）。
@@ -339,7 +339,7 @@ static int SN3_LoopKVOContext = 0;
     _editingPanel = NO;
     _entryTile = nil;
     _lastAddedTile = nil;
-    if (_lsActive) { _lsActive = NO; [self stopLsWatchdog]; notify_post(SN3_LS_DISARM); }
+    if (_lsActive) { _lsActive = NO; [self stopLsWatchdog]; notify_post(SuperScreenshot_LS_DISARM); }
     _lsAlgo = 0;               // v5.17：退出长截图复位为自动滚动(精确)模式
     _modeToggleBtn = nil;      // v5.2
     _nextBtn = nil;            // v5.2
@@ -375,7 +375,7 @@ static int SN3_LoopKVOContext = 0;
     _longCountLabel = nil;
 
     [[LongShotCapture sharedInstance] reset];
-    NSLog(@"[SN3] mask window A destroyed");
+    NSLog(@"[SuperScreenshot] mask window A destroyed");
 }
 
 - (CGRect)cropRect { return _cropRect; }
@@ -581,16 +581,16 @@ static int SN3_LoopKVOContext = 0;
 
 - (void)registerLsCapture {
     if (g_lsReg) return;
-    notify_register_check(SN3_LS_OFFSET, &g_offTok);
-    notify_register_check(SN3_LS_REGIONH, &g_regionTok);
-    notify_register_dispatch(SN3_LS_CAPTURE, &g_capTok, dispatch_get_main_queue(), ^(int t) {
+    notify_register_check(SuperScreenshot_LS_OFFSET, &g_offTok);
+    notify_register_check(SuperScreenshot_LS_REGIONH, &g_regionTok);
+    notify_register_dispatch(SuperScreenshot_LS_CAPTURE, &g_capTok, dispatch_get_main_queue(), ^(int t) {
         [[MaskCropWindow sharedInstance] onLsCapture];
     });
-    notify_register_dispatch(SN3_LS_DONE, &g_doneTok, dispatch_get_main_queue(), ^(int t) {
+    notify_register_dispatch(SuperScreenshot_LS_DONE, &g_doneTok, dispatch_get_main_queue(), ^(int t) {
         [[MaskCropWindow sharedInstance] onLsDone];
     });
     g_lsReg = YES;
-    NSLog(@"[SN3] SB 自动滚动模式 capture/done 通知已注册");
+    NSLog(@"[SuperScreenshot] SB 自动滚动模式 capture/done 通知已注册");
 }
 
 - (void)stopLsWatchdog {
@@ -611,7 +611,7 @@ static int SN3_LoopKVOContext = 0;
     CGFloat regionH = _longFrameRect.size.height;
     uint64_t rh = (uint64_t)(round(regionH * 100.0));
     notify_set_state(g_regionTok, rh);
-    notify_post(SN3_LS_ARM);
+    notify_post(SuperScreenshot_LS_ARM);
 
     [_startBtn setTitle:@"采集中…" forState:UIControlStateNormal];
     _startBtn.enabled = NO;
@@ -695,7 +695,7 @@ static int SN3_LoopKVOContext = 0;
     CGFloat lo = regionH * 0.03f, hi = regionH * 0.90f;
     if (chosenOv < lo) chosenOv = lo;
     if (chosenOv > hi) chosenOv = hi;
-    NSLog(@"[SN3] 精确帧重叠核对：offsetOv=%.1fpt chosen=%.1fpt", offsetOv, chosenOv);
+    NSLog(@"[SuperScreenshot] 精确帧重叠核对：offsetOv=%.1fpt chosen=%.1fpt", offsetOv, chosenOv);
 
     BOOL accepted = [[LongShotCapture sharedInstance] addExactFrame:tile overlapPoints:chosenOv];
     if (accepted) {
@@ -711,7 +711,7 @@ static int SN3_LoopKVOContext = 0;
     _lsActive = NO;
     [self stopLsWatchdog];
     [Common toast:@"已到底，可点【保存长图】"];
-    NSLog(@"[SN3] SB：自动滚动采集结束，共 %ld 屏", (long)[[LongShotCapture sharedInstance] frameCount]);
+    NSLog(@"[SuperScreenshot] SB：自动滚动采集结束，共 %ld 屏", (long)[[LongShotCapture sharedInstance] frameCount]);
 }
 
 // 保存/复制前：若精确模式仍激活，先 disarm 让 App 补抓末屏，再拼接
@@ -719,7 +719,7 @@ static int SN3_LoopKVOContext = 0;
     if (_lsActive) {
         _lsActive = NO;
         [self stopLsWatchdog];
-        notify_post(SN3_LS_DISARM);
+        notify_post(SuperScreenshot_LS_DISARM);
         // 等待 App 补抓最后一屏（~0.35s）后再拼接
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.35 * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), block);
@@ -825,7 +825,7 @@ static int SN3_LoopKVOContext = 0;
                 _didDrawSelection = YES;
             }
         }
-        NSLog(@"[SN3] handleCropPan begin loc=(%.1f,%.1f) sel=%d rect=%@ drag=%@ panel=%d",
+        NSLog(@"[SuperScreenshot] handleCropPan begin loc=(%.1f,%.1f) sel=%d rect=%@ drag=%@ panel=%d",
               loc.x, loc.y, [self hasSelection], NSStringFromCGRect(_cropRect),
               @(_drag), _editingPanel ? 1 : 0);
     } else if (pan.state == UIGestureRecognizerStateChanged) {
@@ -1201,7 +1201,7 @@ static int SN3_LoopKVOContext = 0;
     _editingPanel = YES;                       // 隐藏框选三按钮、保留选框，进入面板模式
     [self buildLocalPanelOnOwnWindowWithRect:_cropScreenRect];
     [self refreshChrome];
-    NSLog(@"[SN3] local panel requested screenRect=(%.0f,%.0f,%.0f,%.0f)",
+    NSLog(@"[SuperScreenshot] local panel requested screenRect=(%.0f,%.0f,%.0f,%.0f)",
           _cropScreenRect.origin.x, _cropScreenRect.origin.y,
           _cropScreenRect.size.width, _cropScreenRect.size.height);
 }
@@ -1572,7 +1572,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
                 [[NSFileManager defaultManager] removeItemAtPath:old error:nil];
             }
         }
-    } @catch (NSException *e) { NSLog(@"[SN3] save history failed: %@", e.reason); }
+    } @catch (NSException *e) { NSLog(@"[SuperScreenshot] save history failed: %@", e.reason); }
 }
 
 // 记录一次截图：计数 +1，并写入历史缩略图，刷新面板顶部计数
@@ -1770,7 +1770,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
 }
 
 - (void)launchLocalAppWithImage:(UIImage *)img {
-    NSArray<NSDictionary *> *apps = [SuperTools sn3LaunchApps];
+    NSArray<NSDictionary *> *apps = [SuperTools superscreenshotLaunchApps];
     if (apps.count == 0) {
         [Common toast:@"请先到设置 → 快捷启动 里添加 App"];
         return;
@@ -1803,7 +1803,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
 - (void)exitLocalPanel {
     if (_localPanel) { [_localPanel removeFromSuperview]; _localPanel = nil; }
     if (_panelScroll) {
-        @try { [_panelScroll removeObserver:self forKeyPath:@"contentOffset" context:(void *)&SN3_LoopKVOContext]; }
+        @try { [_panelScroll removeObserver:self forKeyPath:@"contentOffset" context:(void *)&SuperScreenshot_LoopKVOContext]; }
         @catch (__unused NSException *e) {}
         _panelScroll = nil;
     }
@@ -1822,7 +1822,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
 //          (因为 KVO 改 contentOffset 会触发 _contentView 的 pan 状态混乱, 导致选区调范围失效).
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary *)change context:(void *)context {
-    if (context == &SN3_LoopKVOContext) {
+    if (context == &SuperScreenshot_LoopKVOContext) {
         // v5.25.0: 拖动中不再对齐, 让 sv 自由滚动; 对齐改到 scrollViewDidScroll/didEndDecelerating 中
         return;
     }

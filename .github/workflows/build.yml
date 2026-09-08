@@ -1,4 +1,4 @@
-name: build-sn3
+name: build-superscreenshot
 
 on:
   push:
@@ -49,8 +49,8 @@ jobs:
       - name: "Guard: prefs bundle must be self-contained"
         run: |
           BIN=""
-          for c in .theos/obj/debug/Snapper3ZhExtPrefs.bundle/Snapper3ZhExtPrefs \
-                   .theos/obj/Snapper3ZhExtPrefs.bundle/Snapper3ZhExtPrefs; do
+          for c in .theos/obj/debug/SuperScreenshotPrefs.bundle/SuperScreenshotPrefs \
+                   .theos/obj/SuperScreenshotPrefs.bundle/SuperScreenshotPrefs; do
             [ -f "$c" ] && BIN="$c" && break
           done
           if [ -z "$BIN" ]; then echo "FATAL: 找不到 prefs bundle 可执行文件"; exit 1; fi
@@ -64,40 +64,40 @@ jobs:
 
           # ---- TweakInject：dylib + 对应的 Filter plist（必须是 MobileSubstrate 过滤器，不是 PreferenceLoader 条目！）
           mkdir -p stage/var/jb/usr/lib/TweakInject
-          cp .theos/obj/debug/Snapper3ZhExt.dylib stage/var/jb/usr/lib/TweakInject/ 2>/dev/null || \
-          cp .theos/obj/Snapper3ZhExt.dylib stage/var/jb/usr/lib/TweakInject/ || { echo "FATAL: Snapper3ZhExt.dylib not found"; exit 1; }
-          cp layout/Library/MobileSubstrate/DynamicLibraries/Snapper3ZhExt.plist stage/var/jb/usr/lib/TweakInject/
+          cp .theos/obj/debug/SuperScreenshot.dylib stage/var/jb/usr/lib/TweakInject/ 2>/dev/null || \
+          cp .theos/obj/SuperScreenshot.dylib stage/var/jb/usr/lib/TweakInject/ || { echo "FATAL: SuperScreenshot.dylib not found"; exit 1; }
+          cp layout/Library/MobileSubstrate/DynamicLibraries/SuperScreenshot.plist stage/var/jb/usr/lib/TweakInject/
 
           # ---- PreferenceBundles：先铺 layout（含手写 Info.plist / Root.plist / 图标），
           #      再单独拷贝 theos 产出的可执行文件。
           #      注意：不能整目录覆盖 .theos 的 bundle，否则 theos 自动生成的 Info.plist
           #      会把手写的 NSPrincipalClass 冲掉，面板就没了。
           mkdir -p stage/var/jb/Library/PreferenceBundles
-          cp -R layout/Library/PreferenceBundles/Snapper3ZhExtPrefs.bundle stage/var/jb/Library/PreferenceBundles/
-          cp .theos/obj/debug/Snapper3ZhExtPrefs.bundle/Snapper3ZhExtPrefs stage/var/jb/Library/PreferenceBundles/Snapper3ZhExtPrefs.bundle/ 2>/dev/null || \
-          cp .theos/obj/Snapper3ZhExtPrefs.bundle/Snapper3ZhExtPrefs stage/var/jb/Library/PreferenceBundles/Snapper3ZhExtPrefs.bundle/ || { echo "FATAL: Snapper3ZhExtPrefs executable not found"; exit 1; }
+          cp -R layout/Library/PreferenceBundles/SuperScreenshotPrefs.bundle stage/var/jb/Library/PreferenceBundles/
+          cp .theos/obj/debug/SuperScreenshotPrefs.bundle/SuperScreenshotPrefs stage/var/jb/Library/PreferenceBundles/SuperScreenshotPrefs.bundle/ 2>/dev/null || \
+          cp .theos/obj/SuperScreenshotPrefs.bundle/SuperScreenshotPrefs stage/var/jb/Library/PreferenceBundles/SuperScreenshotPrefs.bundle/ || { echo "FATAL: SuperScreenshotPrefs executable not found"; exit 1; }
 
           # ---- ControlCenter：同样先铺 layout 再拷可执行文件
           mkdir -p stage/var/jb/Library/ControlCenter/Bundles
-          cp -R layout/Library/ControlCenter/Bundles/SN3CCModule.bundle stage/var/jb/Library/ControlCenter/Bundles/
-          cp .theos/obj/debug/SN3CCModule.bundle/SN3CCModule stage/var/jb/Library/ControlCenter/Bundles/SN3CCModule.bundle/ 2>/dev/null || \
-          cp .theos/obj/SN3CCModule.bundle/SN3CCModule stage/var/jb/Library/ControlCenter/Bundles/SN3CCModule.bundle/ || { echo "FATAL: SN3CCModule executable not found"; exit 1; }
+          cp -R layout/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle stage/var/jb/Library/ControlCenter/Bundles/
+          cp .theos/obj/debug/SuperScreenshotCCModule.bundle/SuperScreenshotCCModule stage/var/jb/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle/ 2>/dev/null || \
+          cp .theos/obj/SuperScreenshotCCModule.bundle/SuperScreenshotCCModule stage/var/jb/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle/ || { echo "FATAL: SuperScreenshotCCModule executable not found"; exit 1; }
 
           # v6.18：已移除 companion App 拷贝步骤（套壳方案已撤销）。
 
           # ---- PreferenceLoader 入口
           mkdir -p stage/var/jb/Library/PreferenceLoader/Preferences
-          cp layout/Library/PreferenceLoader/Preferences/Snapper3ZhExt.plist stage/var/jb/Library/PreferenceLoader/Preferences/
+          cp layout/Library/PreferenceLoader/Preferences/SuperScreenshot.plist stage/var/jb/Library/PreferenceLoader/Preferences/
 
           # ---- 自检：三个关键文件缺一不可
-          test -f stage/var/jb/Library/PreferenceBundles/Snapper3ZhExtPrefs.bundle/Snapper3ZhExtPrefs || { echo "FATAL: prefs executable missing"; exit 1; }
-          test -f stage/var/jb/Library/PreferenceBundles/Snapper3ZhExtPrefs.bundle/Root.plist || { echo "FATAL: Root.plist missing"; exit 1; }
-          test -f stage/var/jb/Library/ControlCenter/Bundles/SN3CCModule.bundle/SN3CCModule || { echo "FATAL: CC executable missing"; exit 1; }
+          test -f stage/var/jb/Library/PreferenceBundles/SuperScreenshotPrefs.bundle/SuperScreenshotPrefs || { echo "FATAL: prefs executable missing"; exit 1; }
+          test -f stage/var/jb/Library/PreferenceBundles/SuperScreenshotPrefs.bundle/Root.plist || { echo "FATAL: Root.plist missing"; exit 1; }
+          test -f stage/var/jb/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle/SuperScreenshotCCModule || { echo "FATAL: CC executable missing"; exit 1; }
           # v6.18：已移除 companion App 自检（套壳已撤销）。
-          plutil -extract NSPrincipalClass raw stage/var/jb/Library/PreferenceBundles/Snapper3ZhExtPrefs.bundle/Info.plist
+          plutil -extract NSPrincipalClass raw stage/var/jb/Library/PreferenceBundles/SuperScreenshotPrefs.bundle/Info.plist
 
           # ---- 保险：对所有 Mach-O 显式假签名（theos 一般已签，这里兜底）
-          find stage -type f \( -name "*.dylib" -o -name "Snapper3ZhExtPrefs" -o -name "SN3CCModule" \) -exec ldid -S {} \;
+          find stage -type f \( -name "*.dylib" -o -name "SuperScreenshotPrefs" -o -name "SuperScreenshotCCModule" \) -exec ldid -S {} \;
 
           # Copy control
           cp control stage/DEBIAN/control
@@ -109,14 +109,14 @@ jobs:
           find stage -type f
 
           mkdir -p packages
-          dpkg-deb --root-owner-group -b stage packages/com.axs.snapper3zhext_${VERSION}_iphoneos-arm64.deb
+          dpkg-deb --root-owner-group -b stage packages/com.axs.superscreenshot_${VERSION}_iphoneos-arm64.deb
           echo "=== Deb package ==="
           ls -la packages/
 
       - name: Upload deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SN3extension-deb
+          name: SuperScreenshot-deb
           path: packages/*.deb
 
       - name: Release on tag

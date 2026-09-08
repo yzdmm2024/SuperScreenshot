@@ -1,10 +1,10 @@
 //
-//  SN3ModelPickerController.m — 为某个功能(问AI/识别引擎/翻译)选择「使用模型」(radio)
+//  SuperScreenshotModelPickerController.m — 为某个功能(问AI/识别引擎/翻译)选择「使用模型」(radio)
 //
-#import "SN3ModelStore.h"
+#import "SuperScreenshotModelStore.h"
 #import "Common.h"
 
-@interface SN3ModelPickerController () <UITableViewDelegate, UITableViewDataSource>
+@interface SuperScreenshotModelPickerController () <UITableViewDelegate, UITableViewDataSource>
 @property (nonatomic, strong) NSString *featureKey;
 @property (nonatomic, strong) NSString *selId;
 @property (nonatomic, strong) NSArray<NSDictionary *> *models;     // 库里的模型
@@ -14,7 +14,7 @@
 @property (nonatomic, assign) BOOL hasBuiltin; // 是否追加了内置 PaddleOCR 行
 @end
 
-@implementation SN3ModelPickerController
+@implementation SuperScreenshotModelPickerController
 
 - (instancetype)initWithFeatureKey:(NSString *)key title:(NSString *)title {
     if (self = [super init]) {
@@ -26,7 +26,7 @@
 
 - (BOOL)_libraryHasPaddleOCR {
     for (NSDictionary *m in self.models) {
-        if ([[SN3ModelField(m, @"vendor", @"") lowercaseString] isEqualToString:@"paddleocr"]) return YES;
+        if ([[SuperScreenshotModelField(m, @"vendor", @"") lowercaseString] isEqualToString:@"paddleocr"]) return YES;
     }
     return NO;
 }
@@ -34,10 +34,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor systemBackgroundColor];
-    SN3MigrateIfNeeded();
-    self.models = SN3LoadModels();
-    self.selId  = [SN3Defs() stringForKey:self.featureKey] ?: @"";
-    self.isOCR  = [self.featureKey isEqualToString:SN3_K_OCR];
+    SuperScreenshotMigrateIfNeeded();
+    self.models = SuperScreenshotLoadModels();
+    self.selId  = [SuperScreenshotDefs() stringForKey:self.featureKey] ?: @"";
+    self.isOCR  = [self.featureKey isEqualToString:SuperScreenshot_K_OCR];
 
     // OCR 选择器：若库里还没 PaddleOCR，则在末尾追加一个「内置 PaddleOCR」选项，选中即走免费通道
     NSMutableArray *disp = [self.models mutableCopy];
@@ -73,8 +73,8 @@
         if (self.selId.length == 0) c.accessoryType = UITableViewCellAccessoryCheckmark;
     } else {
         NSDictionary *m = self.dispModels[ip.row-1];
-        c.textLabel.text = SN3ModelField(m, @"name", @"(未命名)");
-        c.detailTextLabel.text = SN3ModelField(m, @"model", @"未设模型");
+        c.textLabel.text = SuperScreenshotModelField(m, @"name", @"(未命名)");
+        c.detailTextLabel.text = SuperScreenshotModelField(m, @"model", @"未设模型");
         if ([self.selId isEqualToString:m[@"id"]]) c.accessoryType = UITableViewCellAccessoryCheckmark;
     }
     return c;
@@ -92,7 +92,7 @@
         id mid = m[@"id"];
         pick = [mid isKindOfClass:[NSString class]] ? (NSString *)mid : @"";
         BOOL isBuiltin = [m[@"__builtin"] boolValue];
-        NSString *vendor = SN3ModelField(m, @"vendor", @"");
+        NSString *vendor = SuperScreenshotModelField(m, @"vendor", @"");
         isPaddleOCRRow = isBuiltin || [vendor isEqualToString:@"paddleocr"];
     }
     self.selId = pick;
@@ -103,17 +103,17 @@
     //   - 选内置 PaddleOCR / vendor=paddleocr → PPOCR_Enabled = YES
     // （仅对 OCR 选择器生效；问AI / 翻译 选择器不动这个键）
     if (self.isOCR) {
-        [SN3Defs() setBool:isPaddleOCRRow forKey:@"PPOCR_Enabled"];
+        [SuperScreenshotDefs() setBool:isPaddleOCRRow forKey:@"PPOCR_Enabled"];
         syncPPOCR_ON = YES;
     }
 
-    [SN3Defs() setObject:pick forKey:self.featureKey];
-    [SN3Defs() synchronize];
+    [SuperScreenshotDefs() setObject:pick forKey:self.featureKey];
+    [SuperScreenshotDefs() synchronize];
     if (syncPPOCR_ON) {
         // 不必再发一次 darwin notify:同一组 setObject:synchronize 后面的统一一次 post
     }
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
-                                         (CFStringRef)@"com.axs.snapper3zhext.prefsChanged", NULL, NULL, YES);
+                                         (CFStringRef)@"com.axs.superscreenshot.prefsChanged", NULL, NULL, YES);
     [self.tv reloadData];
     // 延迟返回，让用户看到勾选
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.35 * NSEC_PER_SEC)),

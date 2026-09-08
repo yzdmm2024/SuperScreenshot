@@ -51,7 +51,7 @@
 + (BOOL)openAppScheme:(NSString *)scheme withImage:(UIImage *)image;
 
 // 9e. 读取「快捷启动」App 列表（设置面板管理），返回过滤后的数组（元素 {name, scheme}），无则返回 @[]
-+ (NSArray<NSDictionary *> *)sn3LaunchApps;
++ (NSArray<NSDictionary *> *)superscreenshotLaunchApps;
 
 // 9b. 加手机壳：给截图套一个 iPhone 外壳边框
 + (UIImage *)phoneCase:(UIImage *)image;

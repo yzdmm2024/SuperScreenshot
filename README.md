@@ -1,8 +1,8 @@
-# SN3延伸板（Snapper3 extension board）
+# SuperScreenshot延伸板（SuperScreenshot extension board）
 
-一个依附在 **Snapper3** 上的扩展插件，和 **Snapper3 Expand** 用同一种方式挂载：
-通过 Snapper3 自带插件管理器 `Snapper3PluginManager registerPlugin:` 把自己注册进
-Snapper3 的截图动作菜单。专注解决“内置/云端 OCR 不识别中文”，且**不依赖**任何付费云端
+一个依附在 **SuperScreenshot** 上的扩展插件，和 **SuperScreenshot Expand** 用同一种方式挂载：
+通过 SuperScreenshot 自带插件管理器 `SuperScreenshotPluginManager registerPlugin:` 把自己注册进
+SuperScreenshot 的截图动作菜单。专注解决“内置/云端 OCR 不识别中文”，且**不依赖**任何付费云端
 OCR Token —— 中文 OCR 用苹果本地 Vision，完全离线免费。
 
 本工程**必须在 Mac（或 Linux）上用 Theos 编译**，Windows 上无法产出 arm64 二进制。
@@ -18,20 +18,20 @@ OCR Token —— 中文 OCR 用苹果本地 Vision，完全离线免费。
 | **长截图** | 滚动当前页面主滚动区域并拼接长图，先预览后点按钮保存；帧间重叠/最大高度/帧间等待均可调，消除拼接缝隙 | 无需密钥，参数可调 |
 | **问 AI** | 先本地 OCR，再把图中文字发给 OpenAI 兼容接口（DeepSeek/OpenAI/自建），底部输入框可连续追问，保留上下文 | 需要 API Key / 接口地址 / 模型名 |
 
-设置面板会出现在 设置 → SN3延伸板。
+设置面板会出现在 设置 → SuperScreenshot延伸板。
 
 ---
 
 ## 目录结构
 
 ```
-Snapper3ZhExt/
+SuperScreenshot/
 ├── Makefile                         # Theos 构建（rootless / arm64）
 ├── control                          # Debian 包元信息
-├── Snapper3ZhExt.plist              # Substrate 注入白名单（仅 SpringBoard）
-├── Tweak.xm                         # Logos：hook Snapper3PluginManager 注册 4 个插件
+├── SuperScreenshot.plist              # Substrate 注入白名单（仅 SpringBoard）
+├── Tweak.xm                         # Logos：hook SuperScreenshotPluginManager 注册 4 个插件
 ├── src/
-│   ├── PluginBase.h/.m              # Snapper3Plugin 协议实现（全部关键 selector 均接管）
+│   ├── PluginBase.h/.m              # SuperScreenshotPlugin 协议实现（全部关键 selector 均接管）
 │   ├── ZhOCRPlugin.h/.m             # OCR 插件
 │   ├── VisionOCR.h/.m               # 本地 Vision 中文 OCR（含文字块坐标）
 │   ├── OCRBoxWindow.h/.m            # OCR 框选定位：高亮文字块 + 点框复制
@@ -52,7 +52,7 @@ Snapper3ZhExt/
 
 1. 安装 Theos：`git clone --recursive https://github.com/theos/theos ~/theos`
    （还要装 Homebrew 的 `xz`、`ldid` 等，Theos 文档可查）。
-2. 打开 `Snapper3ZhExt` 目录，设好环境变量并编译打包：
+2. 打开 `SuperScreenshot` 目录，设好环境变量并编译打包：
 
    ```bash
    export THEOS=/Users/<你>/theos
@@ -61,23 +61,23 @@ Snapper3ZhExt/
    make clean && make package
    ```
 
-3. 产物在 `packages/` 下，得到 `com.axs.snapper3zhext_1.1.0-1_iphoneos-arm64.deb`。
+3. 产物在 `packages/` 下，得到 `com.axs.superscreenshot_1.1.0-1_iphoneos-arm64.deb`。
 
 ## 安装（无根 / 别名根）
 
 - 方式一：把 `.deb` 传到手机，用 **Sileo / Zebra** 打开安装。
 - 方式二：`make do` 或 `make install`（需配好 `THEOS_DEVICE_IP` 与 OpenSSH）。
 - 前置依赖（`control` 已声明会自动装）：`mobilesubstrate`、`preferenceloader`、iOS ≥ 14。
-- 必须先装 **Snapper3**（主体），本扩展是在它的插件系统里注册。
+- 必须先装 **SuperScreenshot**（主体），本扩展是在它的插件系统里注册。
 
-安装完成后到 设置 → SN3延伸板 里填好所需密钥；然后**注销（Respring）**，
-启动 Snapper3 截图后，动作菜单里会出现新的 OCR / 翻译 / 长截图 / 问AI 图标。
+安装完成后到 设置 → SuperScreenshot延伸板 里填好所需密钥；然后**注销（Respring）**，
+启动 SuperScreenshot 截图后，动作菜单里会出现新的 OCR / 翻译 / 长截图 / 问AI 图标。
 
 ---
 
 ## 使用流（以 OCR 为例）
 
-1. 正常触发 Snapper3 截图（音量+电源或 Activator 手势）。
+1. 正常触发 SuperScreenshot 截图（音量+电源或 Activator 手势）。
 2. 框选要识别的区域。
 3. 在动作菜单点新加的 **OCR** 图标。
 4. 半屏浮层在原图上高亮每个文字块，点一下某个框立即复制该处文字；下方按钮可“复制选中 / 复制全部”。
@@ -89,23 +89,23 @@ Snapper3ZhExt/
 
 ## 已知说明与需要在真机调试的点
 
-- **注册稳健性**：`Tweak.xm` 通过 hook `Snapper3PluginManager` 的
+- **注册稳健性**：`Tweak.xm` 通过 hook `SuperScreenshotPluginManager` 的
   `+sharedInstance` / `+defaultManager` / `-init` 做一次惰性注册，避免 dylib 加载顺序问题。
-  这是参考 **Snapper3 Expand** 的做法。若 Snapper3 后续版本连插件协议都变了，需按新协议调整。
+  这是参考 **SuperScreenshot Expand** 的做法。若 SuperScreenshot 后续版本连插件协议都变了，需按新协议调整。
 - **长截图**：用的是“滚动 + 分层渲染拼接”常见方案，不同的 App / 列表实现效果可能不同，
   属于最需要真机调试的一项。若某页面拼接错位，优先调 `LongShotController.m` 里的步进来完成。
 - **翻译 / 问 AI 需要各自平台的自备密钥**，否则对应动作会提示未配置。
-- 偏好默认存 `/var/mobile/Library/Preferences/com.axs.snapper3zhext.plist`。
+- 偏好默认存 `/var/mobile/Library/Preferences/com.axs.superscreenshot.plist`。
 
 ---
 
 ## 原理小结（逆向结论，供你了解为什么可行）
 
-- Snapper3 本体内置 OCR 是苹果 **Vision** `VNRecognizeTextRequest`，语言列表随
+- SuperScreenshot 本体内置 OCR 是苹果 **Vision** `VNRecognizeTextRequest`，语言列表随
   “算法版本 + 精度”动态生成，默认只偏向英文，因此中文常识别不出。
-- Snapper3 自带**第一方插件系统**：`Snapper3PluginManager`（单例）→ `registerPlugin:`，
-  插件实现 `Snapper3Plugin` 协议（`pluginIdentifier` / `wantsToSnapRect:inImage:thenDoPlugin:`）后
+- SuperScreenshot 自带**第一方插件系统**：`SuperScreenshotPluginManager`（单例）→ `registerPlugin:`，
+  插件实现 `SuperScreenshotPlugin` 协议（`pluginIdentifier` / `wantsToSnapRect:inImage:thenDoPlugin:`）后
   就会出现在截图动作菜单。
-- **Snapper3 Expand**（你给的 `Snapper3Expand.dylib`）正是靠 `registerPlugin:` 把
+- **SuperScreenshot Expand**（你给的 `SuperScreenshotExpand.dylib`）正是靠 `registerPlugin:` 把
   `AxsOCRPlugin` 等注册进去的；而它的 OCR 走 **PaddleOCR 云端 API**，必须自备付费 Token。
   本扩展换成本地 Vision，解决了中文识别且不再依赖付费云端 OCR。

@@ -4,25 +4,25 @@
 #import "Common.h"
 #import "AskAIEngine.h"
 #import "ToolbarOrderController.h"
-#import "SN3ModelStore.h"
-#import "SN3License.h"
+#import "SuperScreenshotModelStore.h"
+#import "SuperScreenshotLicense.h"
 
 // v6.20.9 快捷启动 App 管理页（@interface 前置，供 openLaunchApps: 的 alloc/init 通过编译）
-@interface SN3LaunchAppsController : UIViewController <UITableViewDataSource, UITableViewDelegate>
+@interface SuperScreenshotLaunchAppsController : UIViewController <UITableViewDataSource, UITableViewDelegate>
 @end
 
 // 设置面板主控制器：iOS 设置 → 超级截图
-@interface SN3PrefsController : PSListController
+@interface SuperScreenshotPrefsController : PSListController
 @end
 
-@interface SN3PrefsController ()
-@property (nonatomic, strong) UIAlertController *sn3TestAlert;
-@property (nonatomic, strong) NSURLSessionDataTask *sn3TestTask;
-@property (nonatomic, strong) NSTimer *sn3TestTimer;
-@property (nonatomic, assign) BOOL sn3TestResolved;
+@interface SuperScreenshotPrefsController ()
+@property (nonatomic, strong) UIAlertController *superscreenshotTestAlert;
+@property (nonatomic, strong) NSURLSessionDataTask *superscreenshotTestTask;
+@property (nonatomic, strong) NSTimer *superscreenshotTestTimer;
+@property (nonatomic, assign) BOOL superscreenshotTestResolved;
 @end
 
-@implementation SN3PrefsController
+@implementation SuperScreenshotPrefsController
 
 // v5.19：设置面板偶发空白（iOS 14 PSListController 在 viewWillAppear 同帧改 specifiers 时
 //        会把 table 刷空）。把重建推到下一 runloop，并加 try/catch 兜底；监听
@@ -31,7 +31,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     @try { self.specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self]; }
-    @catch (NSException *e) { NSLog(@"[SN3] prefs init failed: %@", e.reason); }
+    @catch (NSException *e) { NSLog(@"[SuperScreenshot] prefs init failed: %@", e.reason); }
     [self _applyButtonActions];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                               selector:@selector(handleBecomeActive)
@@ -39,7 +39,7 @@
                                                 object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                               selector:@selector(handlePrefsChanged)
-                                                  name:@"com.axs.snapper3zhext.prefsChanged"
+                                                  name:@"com.axs.superscreenshot.prefsChanged"
                                                 object:nil];
 }
 
@@ -54,7 +54,7 @@
             if ([self.view respondsToSelector:@selector(reloadData)]) {
                 [(UITableView *)self.view reloadData];
             }
-        } @catch (NSException *e) { NSLog(@"[SN3] prefs reload failed: %@", e.reason); }
+        } @catch (NSException *e) { NSLog(@"[SuperScreenshot] prefs reload failed: %@", e.reason); }
     });
 }
 
@@ -72,7 +72,7 @@
             if ([self.view respondsToSelector:@selector(reloadData)]) {
                 [(UITableView *)self.view reloadData];
             }
-        } @catch (NSException *e) { NSLog(@"[SN3] prefs become-active failed: %@", e.reason); }
+        } @catch (NSException *e) { NSLog(@"[SuperScreenshot] prefs become-active failed: %@", e.reason); }
     });
 }
 
@@ -111,14 +111,14 @@
 
 // v6.01: 打开工具栏排序页（拖动排序 + 开关自定义按钮）
 - (void)openToolbarOrder:(PSSpecifier *)spec {
-    SN3ToolbarOrderController *vc = [[SN3ToolbarOrderController alloc] init];
+    SuperScreenshotToolbarOrderController *vc = [[SuperScreenshotToolbarOrderController alloc] init];
     vc.title = @"工具栏排序";
     [self.navigationController pushViewController:vc animated:YES];
 }
 
 // v6.20.9：打开「快捷启动」App 管理页
 - (void)openLaunchApps:(PSSpecifier *)spec {
-    SN3LaunchAppsController *vc = [[SN3LaunchAppsController alloc] init];
+    SuperScreenshotLaunchAppsController *vc = [[SuperScreenshotLaunchAppsController alloc] init];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -127,41 +127,41 @@
     NSString *pb = [UIPasteboard generalPasteboard].string ?: @"";
     pb = [pb stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if (!pb.length) {
-        [self _sn3Alert:@"剪贴板为空" msg:@"请先在别处复制好智谱 BigModel 的 API Key。"];
+        [self _superscreenshotAlert:@"剪贴板为空" msg:@"请先在别处复制好智谱 BigModel 的 API Key。"];
         return;
     }
     NSUserDefaults *d = [[NSUserDefaults alloc] initWithSuiteName:XZ_PREFS_DOMAIN];
     [d setObject:pb forKey:XZ_KEY_BM_KEY];
     [d synchronize];
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
-                                         (CFStringRef)@"com.axs.snapper3zhext.prefsChanged",
+                                         (CFStringRef)@"com.axs.superscreenshot.prefsChanged",
                                          NULL, NULL, YES);
-    [self _sn3Alert:@"粘贴完成" msg:[NSString stringWithFormat:@"已填入 API Key（前 8 位: %@…）。\n返回主面板即可看到。", [pb substringToIndex:MIN(8u, pb.length)]]];
+    [self _superscreenshotAlert:@"粘贴完成" msg:[NSString stringWithFormat:@"已填入 API Key（前 8 位: %@…）。\n返回主面板即可看到。", [pb substringToIndex:MIN(8u, pb.length)]]];
 }
 
 // v6.07: 用「识别引擎」所选模型打一发最小请求验证 Key 是否有效
 - (void)testBigModelConnection:(PSSpecifier *)spec {
     NSUserDefaults *d = [[NSUserDefaults alloc] initWithSuiteName:XZ_PREFS_DOMAIN];
-    NSArray *models = SN3LoadModels();
-    NSDictionary *m = SN3ModelById(models, [d stringForKey:SN3_K_OCR] ?: @"");
-    if (!m) { [self _sn3Alert:@"未选择模型" msg:@"请先在「大模型库」给识别引擎选一个模型（或一键导入预设）。"]; return; }
-    NSString *bu  = SN3ModelField(m, @"baseURL", @"https://open.bigmodel.cn/api/paas/v4");
-    NSString *key = SN3ModelField(m, @"apiKey",  @"");
-    NSString *md  = SN3ModelField(m, @"model",   @"glm-4v-flash");
-    if (!key.length) { [self _sn3Alert:@"未配置 Key" msg:@"所选模型未填 API Key，请到「大模型库」编辑该模型填入。"]; return; }
+    NSArray *models = SuperScreenshotLoadModels();
+    NSDictionary *m = SuperScreenshotModelById(models, [d stringForKey:SuperScreenshot_K_OCR] ?: @"");
+    if (!m) { [self _superscreenshotAlert:@"未选择模型" msg:@"请先在「大模型库」给识别引擎选一个模型（或一键导入预设）。"]; return; }
+    NSString *bu  = SuperScreenshotModelField(m, @"baseURL", @"https://open.bigmodel.cn/api/paas/v4");
+    NSString *key = SuperScreenshotModelField(m, @"apiKey",  @"");
+    NSString *md  = SuperScreenshotModelField(m, @"model",   @"glm-4v-flash");
+    if (!key.length) { [self _superscreenshotAlert:@"未配置 Key" msg:@"所选模型未填 API Key，请到「大模型库」编辑该模型填入。"]; return; }
     [self _runTestWithTitle:@"测试中（识别模型）" baseURL:bu apiKey:key model:md];
 }
 
 // v6.07: 用「问AI」所选模型打一发最小 chat 请求验证 OpenAI 兼容接口是否可用
 - (void)testAskAIConnection:(PSSpecifier *)spec {
     NSUserDefaults *d = [[NSUserDefaults alloc] initWithSuiteName:XZ_PREFS_DOMAIN];
-    NSArray *models = SN3LoadModels();
-    NSDictionary *m = SN3ModelById(models, [d stringForKey:SN3_K_AI] ?: @"");
-    if (!m) { [self _sn3Alert:@"未选择模型" msg:@"请先在「大模型库」给问AI选一个模型（或一键导入预设）。"]; return; }
-    NSString *bu  = SN3ModelField(m, @"baseURL", @"https://api.deepseek.com/v1");
-    NSString *key = SN3ModelField(m, @"apiKey",  @"");
-    NSString *md  = SN3ModelField(m, @"model",   @"deepseek-chat");
-    if (!key.length) { [self _sn3Alert:@"未配置 Key" msg:@"所选模型未填 API Key，请到「大模型库」编辑该模型填入。"]; return; }
+    NSArray *models = SuperScreenshotLoadModels();
+    NSDictionary *m = SuperScreenshotModelById(models, [d stringForKey:SuperScreenshot_K_AI] ?: @"");
+    if (!m) { [self _superscreenshotAlert:@"未选择模型" msg:@"请先在「大模型库」给问AI选一个模型（或一键导入预设）。"]; return; }
+    NSString *bu  = SuperScreenshotModelField(m, @"baseURL", @"https://api.deepseek.com/v1");
+    NSString *key = SuperScreenshotModelField(m, @"apiKey",  @"");
+    NSString *md  = SuperScreenshotModelField(m, @"model",   @"deepseek-chat");
+    if (!key.length) { [self _superscreenshotAlert:@"未配置 Key" msg:@"所选模型未填 API Key，请到「大模型库」编辑该模型填入。"]; return; }
     [self _runTestWithTitle:@"测试中（问 AI）" baseURL:bu apiKey:key model:md];
 }
 
@@ -210,21 +210,21 @@
 
 // v6.07：打开「大模型库」管理页
 - (void)openModelLib:(PSSpecifier *)spec {
-    SN3ModelLibController *vc = [[SN3ModelLibController alloc] init];
+    SuperScreenshotModelLibController *vc = [[SuperScreenshotModelLibController alloc] init];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
 // v6.07：为 问AI / 识别引擎 / 翻译 选「使用模型」
 - (void)openPickAI:(PSSpecifier *)spec {
-    SN3ModelPickerController *vc = [[SN3ModelPickerController alloc] initWithFeatureKey:SN3_K_AI title:@"问AI · 使用模型"];
+    SuperScreenshotModelPickerController *vc = [[SuperScreenshotModelPickerController alloc] initWithFeatureKey:SuperScreenshot_K_AI title:@"问AI · 使用模型"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 - (void)openPickOCR:(PSSpecifier *)spec {
-    SN3ModelPickerController *vc = [[SN3ModelPickerController alloc] initWithFeatureKey:SN3_K_OCR title:@"识别引擎 · 使用模型"];
+    SuperScreenshotModelPickerController *vc = [[SuperScreenshotModelPickerController alloc] initWithFeatureKey:SuperScreenshot_K_OCR title:@"识别引擎 · 使用模型"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 - (void)openPickTrans:(PSSpecifier *)spec {
-    SN3ModelPickerController *vc = [[SN3ModelPickerController alloc] initWithFeatureKey:SN3_K_TRANS title:@"翻译 · 使用模型"];
+    SuperScreenshotModelPickerController *vc = [[SuperScreenshotModelPickerController alloc] initWithFeatureKey:SuperScreenshot_K_TRANS title:@"翻译 · 使用模型"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -243,42 +243,42 @@
 
 // v6.18: PaddleOCR 连通性测试（崩溃防护版）
 //   修复点：① 全部 UI 变更只走主线程；② 轮询改用主队列递归，杜绝后台线程改 UIAlertController；
-//          ③ 用实例属性(self.sn3TestAlert/Task/Timer/Resolved) 代替 __block 栈变量，避免跨线程竞态；
-//          ④ 每次更新都先查 self.sn3TestResolved，已结束则直接 return，绝不改已 dismiss 的弹窗；
-//          ⑤ 超时守卫 + 每次结束都 invalidate 计时器 / cancel 请求，单一收尾入口 _sn3ResolveTestWithTitle:。
+//          ③ 用实例属性(self.superscreenshotTestAlert/Task/Timer/Resolved) 代替 __block 栈变量，避免跨线程竞态；
+//          ④ 每次更新都先查 self.superscreenshotTestResolved，已结束则直接 return，绝不改已 dismiss 的弹窗；
+//          ⑤ 超时守卫 + 每次结束都 invalidate 计时器 / cancel 请求，单一收尾入口 _superscreenshotResolveTestWithTitle:。
 - (void)testPPOCRConnection:(PSSpecifier *)spec {
-	[self _sn3FinishTest];   // 先清掉上一次可能残留的测试态
+	[self _superscreenshotFinishTest];   // 先清掉上一次可能残留的测试态
 	NSUserDefaults *d = [[NSUserDefaults alloc] initWithSuiteName:XZ_PREFS_DOMAIN];
 	NSString *apiURL = [d stringForKey:XZ_KEY_PPOCR_URL] ?: @"";
 	NSString *token  = [d stringForKey:XZ_KEY_PPOCR_TOKEN] ?: @"";
 	NSString *model  = [d stringForKey:XZ_KEY_PPOCR_MODEL] ?: @"PP-OCRv6";
 	if (!apiURL.length || !token.length) {
-		[self _sn3Alert:@"未配置" msg:@"请先在「百度 PaddleOCR」里填入 API_URL 和 Token（均从 aistudio.baidu.com/paddleocr/task 页面获取）。"];
+		[self _superscreenshotAlert:@"未配置" msg:@"请先在「百度 PaddleOCR」里填入 API_URL 和 Token（均从 aistudio.baidu.com/paddleocr/task 页面获取）。"];
 		return;
 	}
 	NSURL *u = [NSURL URLWithString:apiURL];
 	if (!u) {
-		[self _sn3Alert:@"API_URL 无效" msg:@"复制的 API_URL 不完整或含非法字符，请确认以 https:// 开头、完整粘贴。"];
+		[self _superscreenshotAlert:@"API_URL 无效" msg:@"复制的 API_URL 不完整或含非法字符，请确认以 https:// 开头、完整粘贴。"];
 		return;
 	}
 	// 严格校验——很多人把「任务页网址」误填进 API_URL，提前给明确指引而不是让它去请求再崩
 	NSString *host = u.host ?: @"";
 	if ([host isEqualToString:@"aistudio.baidu.com"] || [apiURL containsString:@"aistudio.baidu.com/paddleocr"]) {
-		[self _sn3Alert:@"API_URL 填错了" msg:@"你填的是「任务页网址」(aistudio.baidu.com/paddleocr/task)，不是接口地址。\n\n请回到该页面，点右侧「API」按钮，复制示例代码里的接口地址（形如 https://paddleocr.aistudio-app.com/api/v2/ocr/jobs），再粘贴进来。"];
+		[self _superscreenshotAlert:@"API_URL 填错了" msg:@"你填的是「任务页网址」(aistudio.baidu.com/paddleocr/task)，不是接口地址。\n\n请回到该页面，点右侧「API」按钮，复制示例代码里的接口地址（形如 https://paddleocr.aistudio-app.com/api/v2/ocr/jobs），再粘贴进来。"];
 		return;
 	}
 	if (![host containsString:@"aistudio-app.com"]) {
-		[self _sn3Alert:@"API_URL 可能不对" msg:@"PaddleOCR 的接口地址主机名应为 xxx.aistudio-app.com。你填的看起来不是 AI Studio 给的接口地址，请检查是否复制完整。"];
+		[self _superscreenshotAlert:@"API_URL 可能不对" msg:@"PaddleOCR 的接口地址主机名应为 xxx.aistudio-app.com。你填的看起来不是 AI Studio 给的接口地址，请检查是否复制完整。"];
 		return;
 	}
 	__weak typeof(self) wself = self;
-	self.sn3TestResolved = NO;
+	self.superscreenshotTestResolved = NO;
 	UIAlertController *ac = [UIAlertController alertControllerWithTitle:@"测试中（百度 PaddleOCR）" message:@"正在提交测试任务，请稍候…（v2 异步接口，约 10~30 秒）" preferredStyle:UIAlertControllerStyleAlert];
-	self.sn3TestAlert = ac;
+	self.superscreenshotTestAlert = ac;
 	[self presentViewController:ac animated:YES completion:nil];
 	// 单一超时守卫（45s），在主运行循环触发、主线程执行，安全
-	wself.sn3TestTimer = [NSTimer scheduledTimerWithTimeInterval:45.0 repeats:NO block:^(NSTimer *t) {
-		[wself _sn3ResolveTestWithTitle:@"✗ 验证失败"
+	wself.superscreenshotTestTimer = [NSTimer scheduledTimerWithTimeInterval:45.0 repeats:NO block:^(NSTimer *t) {
+		[wself _superscreenshotResolveTestWithTitle:@"✗ 验证失败"
 		                         message:@"请求超时（45 秒未响应）。请检查：① 设备网络；② API_URL 是否完整正确；③ Token 是否有效；④ AI Studio 队列是否繁忙（可稍后重试）。"];
 	}];
 	// 构造一张 64x64 白底小图做探测（不需要真有文字）
@@ -292,48 +292,48 @@
 	// v2 异步任务接口（URL 含 /api/v2/ocr/jobs）→ 真实提交+轮询；其它地址 → 同步 JSON 兜底
 	BOOL isJobs = [[u.path lowercaseString] containsString:@"/api/v2/ocr/jobs"];
 	if (isJobs) {
-		[wself _sn3PPOCRTestJobsURL:u token:token model:model jpeg:jpeg];
+		[wself _superscreenshotPPOCRTestJobsURL:u token:token model:model jpeg:jpeg];
 	} else {
-		[wself _sn3PPOCRTestSyncURL:u token:token jpeg:jpeg];
+		[wself _superscreenshotPPOCRTestSyncURL:u token:token jpeg:jpeg];
 	}
 }
 
 // 统一收尾：标记已结束 + 作废计时器 + 取消请求；并在主线程更新弹窗内容（若弹窗还在）。
-// 任意支路只能成功结束一次（靠 self.sn3TestResolved 守卫）。
-- (void)_sn3ResolveTestWithTitle:(NSString *)title message:(NSString *)message {
-	if (self.sn3TestResolved) return;   // 已经结束过，绝不重复处理 / 改已 dismiss 的弹窗
-	self.sn3TestResolved = YES;
-	[self.sn3TestTimer invalidate]; self.sn3TestTimer = nil;
-	[self.sn3TestTask cancel];     self.sn3TestTask = nil;
-	UIAlertController *ac = self.sn3TestAlert;
+// 任意支路只能成功结束一次（靠 self.superscreenshotTestResolved 守卫）。
+- (void)_superscreenshotResolveTestWithTitle:(NSString *)title message:(NSString *)message {
+	if (self.superscreenshotTestResolved) return;   // 已经结束过，绝不重复处理 / 改已 dismiss 的弹窗
+	self.superscreenshotTestResolved = YES;
+	[self.superscreenshotTestTimer invalidate]; self.superscreenshotTestTimer = nil;
+	[self.superscreenshotTestTask cancel];     self.superscreenshotTestTask = nil;
+	UIAlertController *ac = self.superscreenshotTestAlert;
 	if (!ac) return;
 	ac.title = title;
 	ac.message = message;
 	if (ac.actions.count == 0) {
 		[ac addAction:[UIAlertAction actionWithTitle:@"知道了" style:UIAlertActionStyleCancel handler:^(UIAlertAction *a){
-			[self _sn3DismissTestAlert];
+			[self _superscreenshotDismissTestAlert];
 		}]];
 	}
 }
 
-- (void)_sn3DismissTestAlert {
-	UIAlertController *ac = self.sn3TestAlert;
+- (void)_superscreenshotDismissTestAlert {
+	UIAlertController *ac = self.superscreenshotTestAlert;
 	if (!ac) return;
-	[self.sn3TestAlert dismissViewControllerAnimated:YES completion:nil];
-	self.sn3TestAlert = nil;
+	[self.superscreenshotTestAlert dismissViewControllerAnimated:YES completion:nil];
+	self.superscreenshotTestAlert = nil;
 }
 
 // 测试开始前 / 切换到别的页面前：彻底清掉上一次测试残留
-- (void)_sn3FinishTest {
-	[self.sn3TestTimer invalidate]; self.sn3TestTimer = nil;
-	[self.sn3TestTask cancel];     self.sn3TestTask = nil;
-	self.sn3TestResolved = YES;
-	self.sn3TestAlert = nil;
+- (void)_superscreenshotFinishTest {
+	[self.superscreenshotTestTimer invalidate]; self.superscreenshotTestTimer = nil;
+	[self.superscreenshotTestTask cancel];     self.superscreenshotTestTask = nil;
+	self.superscreenshotTestResolved = YES;
+	self.superscreenshotTestAlert = nil;
 }
 
 // v6.18: v2 异步任务接口的连通性测试（multipart 提交，拿到 jobId 后转主队列轮询）
-- (void)_sn3PPOCRTestJobsURL:(NSURL *)u token:(NSString *)token model:(NSString *)model jpeg:(NSData *)jpeg {
-	NSString *boundary = @"----SN3PaddleOCRBoundary7Q2k9X";
+- (void)_superscreenshotPPOCRTestJobsURL:(NSURL *)u token:(NSString *)token model:(NSString *)model jpeg:(NSData *)jpeg {
+	NSString *boundary = @"----SuperScreenshotPaddleOCRBoundary7Q2k9X";
 	NSMutableData *body = [NSMutableData data];
 	void (^af)(NSString *, NSString *) = ^(NSString *name, NSString *value) {
 		[body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
@@ -357,8 +357,8 @@
 	[req setHTTPBody:body];
 	[req setTimeoutInterval:40];
 	__weak typeof(self) wself = self;
-	self.sn3TestTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {
-		if (wself.sn3TestResolved) return;
+	self.superscreenshotTestTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {
+		if (wself.superscreenshotTestResolved) return;
 		NSString *title = @"✗ 验证失败", *msg = nil;
 		if (err) {
 			msg = [NSString stringWithFormat:@"网络错误：%@", err.localizedDescription];
@@ -373,32 +373,32 @@
 				if (![jobId isKindOfClass:[NSString class]] || !jobId.length) {
 					msg = @"已联通但未返回任务 ID，请重试。";
 				} else {
-					[wself _sn3PPOCRTestPollJob:jobId baseURL:u token:token];
+					[wself _superscreenshotPPOCRTestPollJob:jobId baseURL:u token:token];
 					return;
 				}
 			}
 		}
 		dispatch_async(dispatch_get_main_queue(), ^{
-			[wself _sn3ResolveTestWithTitle:title message:msg];
+			[wself _superscreenshotResolveTestWithTitle:title message:msg];
 		});
 	}];
-	[self.sn3TestTask resume];
+	[self.superscreenshotTestTask resume];
 }
 
 // v6.18: 轮询任务状态直到 done / failed（主队列递归，所有状态/UI 变更统一在主线程）
-- (void)_sn3PPOCRTestPollJob:(NSString *)jobId baseURL:(NSURL *)u token:(NSString *)token {
-	if (self.sn3TestResolved) return;
+- (void)_superscreenshotPPOCRTestPollJob:(NSString *)jobId baseURL:(NSURL *)u token:(NSString *)token {
+	if (self.superscreenshotTestResolved) return;
 	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [u absoluteString], jobId]];
 	NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
 	[req setHTTPMethod:@"GET"];
 	[req setValue:[@"Bearer " stringByAppendingString:token] forHTTPHeaderField:@"Authorization"];
 	[req setTimeoutInterval:30];
 	__weak typeof(self) wself = self;
-	self.sn3TestTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {
-		if (wself.sn3TestResolved) return;
+	self.superscreenshotTestTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {
+		if (wself.superscreenshotTestResolved) return;
 		if (err) {
 			dispatch_async(dispatch_get_main_queue(), ^{
-				[wself _sn3ResolveTestWithTitle:@"✗ 验证失败" message:[NSString stringWithFormat:@"轮询失败：%@", err.localizedDescription]];
+				[wself _superscreenshotResolveTestWithTitle:@"✗ 验证失败" message:[NSString stringWithFormat:@"轮询失败：%@", err.localizedDescription]];
 			});
 			return;
 		}
@@ -407,27 +407,27 @@
 		NSString *state = dd[@"state"];
 		if ([state isEqualToString:@"done"]) {
 			dispatch_async(dispatch_get_main_queue(), ^{
-				[wself _sn3ResolveTestWithTitle:@"✓ 连接成功"
+				[wself _superscreenshotResolveTestWithTitle:@"✓ 连接成功"
 				                         message:@"API_URL + Token 正确，已成功联通百度 PaddleOCR（v2 异步接口，提交并跑完了一个任务）。\n\n去主面板点 OCR 即可识别文字（免费）。"];
 			});
 		} else if ([state isEqualToString:@"failed"]) {
 			NSString *em = dd[@"errorMsg"] ?: @"任务失败";
 			dispatch_async(dispatch_get_main_queue(), ^{
-				[wself _sn3ResolveTestWithTitle:@"✗ 验证失败" message:[NSString stringWithFormat:@"任务失败：%@", em]];
+				[wself _superscreenshotResolveTestWithTitle:@"✗ 验证失败" message:[NSString stringWithFormat:@"任务失败：%@", em]];
 			});
 		} else {
 			// 关键：用主队列递归轮询，所有 UI/状态变更统一在主线程，杜绝跨线程改弹窗
 			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2*NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-				[wself _sn3PPOCRTestPollJob:jobId baseURL:u token:token];
+				[wself _superscreenshotPPOCRTestPollJob:jobId baseURL:u token:token];
 			});
 		}
 	}];
-	[self.sn3TestTask resume];
+	[self.superscreenshotTestTask resume];
 }
 
 // v6.18: 同步接口兜底测试（非 /api/v2/ocr/jobs 的其它地址）
-- (void)_sn3PPOCRTestSyncURL:(NSURL *)u token:(NSString *)token jpeg:(NSData *)jpeg {
-	if (self.sn3TestResolved) return;
+- (void)_superscreenshotPPOCRTestSyncURL:(NSURL *)u token:(NSString *)token jpeg:(NSData *)jpeg {
+	if (self.superscreenshotTestResolved) return;
 	NSString *b64 = [jpeg base64EncodedStringWithOptions:0];
 	BOOL isHub = [[u.host lowercaseString] containsString:@"aistudio-hub"];
 	NSDictionary *body = isHub ? @{ @"image": b64 } : @{ @"file": b64, @"fileType": @1 };
@@ -439,8 +439,8 @@
 	[req setHTTPBody:json];
 	[req setTimeoutInterval:20];
 	__weak typeof(self) wself = self;
-	self.sn3TestTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {
-		if (wself.sn3TestResolved) return;
+	self.superscreenshotTestTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *resp, NSError *err) {
+		if (wself.superscreenshotTestResolved) return;
 		NSString *title = @"✗ 验证失败", *msg = nil;
 		if (err) msg = [NSString stringWithFormat:@"网络错误：%@", err.localizedDescription];
 		else {
@@ -453,10 +453,10 @@
 			}
 		}
 		dispatch_async(dispatch_get_main_queue(), ^{
-			[wself _sn3ResolveTestWithTitle:title message:msg];
+			[wself _superscreenshotResolveTestWithTitle:title message:msg];
 		});
 	}];
-	[self.sn3TestTask resume];
+	[self.superscreenshotTestTask resume];
 }
 
 - (void)openAPIPage:(PSSpecifier *)spec {
@@ -465,7 +465,7 @@
     if (u) [[UIApplication sharedApplication] openURL:u options:@{} completionHandler:nil];
 }
 
-- (void)_sn3Alert:(NSString *)title msg:(NSString *)msg {
+- (void)_superscreenshotAlert:(NSString *)title msg:(NSString *)msg {
     UIAlertController *ac = [UIAlertController alertControllerWithTitle:title
                                                                 message:msg
                                                          preferredStyle:UIAlertControllerStyleAlert];
@@ -475,37 +475,37 @@
 
 #pragma mark - v6.20 设备授权（UDID 验证）
 
-- (void)sn3CopyUDID:(PSSpecifier *)spec {
+- (void)superscreenshotCopyUDID:(PSSpecifier *)spec {
     (void)spec;
-    NSString *udid = [SN3License deviceUDID];
+    NSString *udid = [SuperScreenshotLicense deviceUDID];
     [[UIPasteboard generalPasteboard] setString:udid];
-    [self _sn3Alert:@"已复制 UDID" msg:[NSString stringWithFormat:@"本机 UDID：\n%@", udid]];
+    [self _superscreenshotAlert:@"已复制 UDID" msg:[NSString stringWithFormat:@"本机 UDID：\n%@", udid]];
 }
 
-- (void)sn3ShowVerification:(PSSpecifier *)spec {
+- (void)superscreenshotShowVerification:(PSSpecifier *)spec {
     (void)spec;
     // v6.20.2：在设置进程内直接 present 在 self 上（安全、可取消、不会冻结）。
-    [SN3License presentVerificationInViewController:self completion:^(BOOL unlocked) {
-        [self _sn3Alert:unlocked ? @"已解锁" : @"未解锁"
+    [SuperScreenshotLicense presentVerificationInViewController:self completion:^(BOOL unlocked) {
+        [self _superscreenshotAlert:unlocked ? @"已解锁" : @"未解锁"
                       msg:unlocked ? @"本机已授权，可正常使用全部功能。"
                                   : @"尚未授权：点「复制本机 UDID」发给开发者获取解锁码后，再点本按钮输入。"];
     }];
 }
 
-- (void)sn3RevokeLicense:(PSSpecifier *)spec {
+- (void)superscreenshotRevokeLicense:(PSSpecifier *)spec {
     (void)spec;
-    [SN3License revoke];
-    [self _sn3Alert:@"已锁定" msg:@"本机授权已撤销，下次使用「超级截图」需重新输入解锁码。"];
+    [SuperScreenshotLicense revoke];
+    [self _superscreenshotAlert:@"已锁定" msg:@"本机授权已撤销，下次使用「超级截图」需重新输入解锁码。"];
 }
 
 @end
 
 // v5.16：API 开通页面 —— 用 PSButtonCell（带 buttonAction），点行直接打开 Safari。
 //         PSLinkCell 无 detail 时会被渲染成灰色禁用、点了没反应，这里改用可点的按钮行。
-@interface SN3LinksController : PSListController
+@interface SuperScreenshotLinksController : PSListController
 @end
 
-@implementation SN3LinksController
+@implementation SuperScreenshotLinksController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -567,7 +567,7 @@
 
 #pragma mark - v6.20.9 快捷启动 App 管理
 
-@implementation SN3LaunchAppsController {
+@implementation SuperScreenshotLaunchAppsController {
     NSMutableArray<NSDictionary *> *_apps;
     UITableView *_tv;
 }
@@ -617,7 +617,7 @@
     [d setObject:_apps forKey:XZ_KEY_LAUNCH_APPS];
     [d synchronize];
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
-                                         (CFStringRef)@"com.axs.snapper3zhext.prefsChanged",
+                                         (CFStringRef)@"com.axs.superscreenshot.prefsChanged",
                                          NULL, NULL, YES);
 }
 
@@ -628,8 +628,8 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)ip {
-    UITableViewCell *c = [tv dequeueReusableCellWithIdentifier:@"sn3launch"];
-    if (!c) c = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"sn3launch"];
+    UITableViewCell *c = [tv dequeueReusableCellWithIdentifier:@"superscreenshotlaunch"];
+    if (!c) c = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"superscreenshotlaunch"];
     if (_apps.count == 0) {
         c.textLabel.text = @"（暂无，点右上角「添加」）";
         c.detailTextLabel.text = @"";
@@ -711,6 +711,6 @@
 
 @end
 
-// v5.20：SN3ToolbarController 暂时下线, 避免 PSListController 内部状态在 iOS 14 加载时崩溃,
+// v5.20：SuperScreenshotToolbarController 暂时下线, 避免 PSListController 内部状态在 iOS 14 加载时崩溃,
 //        产生「未能载入软件包」错误。工具栏排版仍按 plist 里的 PSSwitchCell「单排滑动显示」+ 隐藏项。
 //        下版用更兼容的 PSSpecifier 接口重写排序页。

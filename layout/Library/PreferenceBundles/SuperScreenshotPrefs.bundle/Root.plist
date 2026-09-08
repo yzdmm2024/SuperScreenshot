@@ -14,13 +14,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
 			<true/>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>Menu_Enabled</string>
 			<key>label</key>
@@ -60,11 +60,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>BigModel_Prompt</string>
 			<key>label</key>
@@ -97,13 +97,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>PPOCR_Enabled</string>
 			<key>label</key>
@@ -111,11 +111,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>PPOCR_APIURL</string>
 			<key>label</key>
@@ -125,11 +125,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSecureEditTextCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>PPOCR_Token</string>
 			<key>label</key>
@@ -139,11 +139,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>PPOCR_Model</string>
 			<key>label</key>
@@ -187,13 +187,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>Translate_Enabled</string>
 			<key>label</key>
@@ -201,13 +201,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>default</key>
 			<string>zh</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>Translate_TargetLang</string>
 			<key>label</key>
@@ -217,11 +217,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>Translate_APIAppID</string>
 			<key>label</key>
@@ -231,11 +231,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSecureEditTextCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>Translate_APIKey</string>
 			<key>label</key>
@@ -253,13 +253,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>LongShot_Enabled</string>
 			<key>label</key>
@@ -267,13 +267,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>default</key>
 			<real>0.15</real>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>LongShot_Overlap</string>
 			<key>label</key>
@@ -287,13 +287,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>default</key>
 			<string>20000</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>LongShot_MaxHeight</string>
 			<key>label</key>
@@ -303,13 +303,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>default</key>
 			<string>0.05</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>LongShot_Interval</string>
 			<key>label</key>
@@ -321,7 +321,7 @@
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>LongShot_StepRatio</string>
 			<key>label</key>
@@ -333,17 +333,17 @@
 			<key>default</key>
 			<integer>82</integer>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>LongShot_Quick</string>
 			<key>label</key>
@@ -367,13 +367,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>default</key>
 			<string>请描述这张图片中的内容</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>AskAI_Prompt</string>
 			<key>label</key>
@@ -399,17 +399,17 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>需安装 CCSupport（Snapper3 的控制中心模块同样依赖它）。装好后下拉控制中心，在编辑模式里找到「SN3截图」添加，点按即可截屏并弹出浮动菜单。</string>
+			<string>需安装 CCSupport（SuperScreenshot 的控制中心模块同样依赖它）。装好后下拉控制中心，在编辑模式里找到「SuperScreenshot截图」添加，点按即可截屏并弹出浮动菜单。</string>
 			<key>label</key>
 			<string>控制中心</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSMultiValueSpecifier</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>CC_Icon</string>
 			<key>title</key>
@@ -443,11 +443,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSegmentCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>Toolbar_Layout</string>
 			<key>label</key>
@@ -501,19 +501,19 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>选中机型外壳后，点「正常截图」会直接把整屏套上手机壳再存入相册（仅对正常截图生效）。内置 iPhone 12 Pro 四色（石墨黑/海蓝/银/金），选「自定义机框」可用 Filza 在 /var/mobile/Documents/com.axs.snapper3zhext/Frames/&lt;名称&gt;/ 下放 frame.png + info.json 来自定义。</string>
+			<string>选中机型外壳后，点「正常截图」会直接把整屏套上手机壳再存入相册（仅对正常截图生效）。内置 iPhone 12 Pro 四色（石墨黑/海蓝/银/金），选「自定义机框」可用 Filza 在 /var/mobile/Documents/com.axs.superscreenshot/Frames/&lt;名称&gt;/ 下放 frame.png + info.json 来自定义。</string>
 			<key>label</key>
 			<string>手机壳库</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>PhoneCase_AutoOn</string>
 			<key>label</key>
@@ -521,11 +521,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSMultiValueSpecifier</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>PhoneCase_Id</string>
 			<key>title</key>
@@ -553,11 +553,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>PhoneCase_CustomName</string>
 			<key>label</key>
@@ -569,19 +569,19 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>面板顶部实时显示「累计截图次数」。开启「保存截图历史」后，每次截图存一张缩略图到历史（点面板上的「历史」可查看/分享/删除，最多保留下方条数）。历史缩略图存在 /var/mobile/Documents/com.axs.snapper3zhext/History/。</string>
+			<string>面板顶部实时显示「累计截图次数」。开启「保存截图历史」后，每次截图存一张缩略图到历史（点面板上的「历史」可查看/分享/删除，最多保留下方条数）。历史缩略图存在 /var/mobile/Documents/com.axs.superscreenshot/History/。</string>
 			<key>label</key>
 			<string>统计与历史</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
 			<true/>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>History_Enabled</string>
 			<key>label</key>
@@ -589,13 +589,13 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>com.axs.snapper3zhext.prefsChanged</string>
+			<string>com.axs.superscreenshot.prefsChanged</string>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
 			<key>default</key>
 			<string>50</string>
 			<key>defaults</key>
-			<string>com.axs.snapper3zhext</string>
+			<string>com.axs.superscreenshot</string>
 			<key>key</key>
 			<string>History_Max</string>
 			<key>label</key>
@@ -613,7 +613,7 @@
 		</dict>
 		<dict>
 			<key>action</key>
-			<string>sn3CopyUDID:</string>
+			<string>superscreenshotCopyUDID:</string>
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
@@ -621,7 +621,7 @@
 		</dict>
 		<dict>
 			<key>action</key>
-			<string>sn3ShowVerification:</string>
+			<string>superscreenshotShowVerification:</string>
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
@@ -629,7 +629,7 @@
 		</dict>
 		<dict>
 			<key>action</key>
-			<string>sn3RevokeLicense:</string>
+			<string>superscreenshotRevokeLicense:</string>
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>

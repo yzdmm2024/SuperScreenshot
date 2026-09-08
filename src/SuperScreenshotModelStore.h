@@ -1,0 +1,30 @@
+//
+//  SuperScreenshotModelStore.h — 大模型库 预置 bundle 侧共享工具（自包含，仅用 NSUserDefaults + UIKit）
+//  与 tweak 侧 Common 的 superscreenshotModel* 解析对称：同一份 JSON(XZ_KEY_MODEL_LIB) 两端各自读写。
+//
+#import <UIKit/UIKit.h>
+
+// 预置域名与 tweak 侧 Common.h 保持一致
+#define SuperScreenshot_DOMAIN      @"com.axs.superscreenshot"
+#define SuperScreenshot_K_LIB       @"ModelLibrary_JSON"
+#define SuperScreenshot_K_AI        @"ModelAI_ID"
+#define SuperScreenshot_K_OCR       @"ModelOCR_ID"
+#define SuperScreenshot_K_TRANS     @"ModelTrans_ID"
+#define SuperScreenshot_K_MIGRATED  @"ModelLib_Migrated"
+
+// —— 模型库读写（预置 bundle 侧）——
+NSUserDefaults *SuperScreenshotDefs(void);
+NSArray<NSDictionary *> *SuperScreenshotLoadModels(void);
+void SuperScreenshotSaveModels(NSArray *models);
+NSString *SuperScreenshotModelField(NSDictionary *m, NSString *k, NSString *def);
+NSDictionary *SuperScreenshotModelById(NSArray *models, NSString *mid);
+void SuperScreenshotMigrateIfNeeded(void);                 // 一次性把旧 AskAI_*/BigModel_* 并入库
+NSArray<NSDictionary *> *SuperScreenshotPresets(void);     // 一键导入的预设厂商列表
+NSString *SuperScreenshotNewUUID(void);
+
+@interface SuperScreenshotModelLibController : UIViewController
+@end
+
+@interface SuperScreenshotModelPickerController : UIViewController
+- (instancetype)initWithFeatureKey:(NSString *)key title:(NSString *)title;
+@end

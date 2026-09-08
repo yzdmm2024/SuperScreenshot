@@ -170,7 +170,7 @@
     [viewer addSubview:del];
 
     viewer.tag = 9909;   // 存 path
-    objc_setAssociatedObject(viewer, "sn3_path", path, OBJC_ASSOCIATION_RETAIN);
+    objc_setAssociatedObject(viewer, "superscreenshot_path", path, OBJC_ASSOCIATION_RETAIN);
     [self.window addSubview:viewer];
     self.viewer = viewer;
 }
@@ -181,7 +181,7 @@
 }
 
 - (void)viewerAction:(UIButton *)sender {
-    NSString *path = objc_getAssociatedObject(self.viewer, "sn3_path");
+    NSString *path = objc_getAssociatedObject(self.viewer, "superscreenshot_path");
     if (!path) return;
     if (sender.tag == 1) {
         // 分享

@@ -1,12 +1,12 @@
 //
 //  Common.h
-//  Snapper3ZhExt
+//  SuperScreenshot
 //
-//  共享常量与工具。偏好存放在默认域 com.axs.snapper3zhext
+//  共享常量与工具。偏好存放在默认域 com.axs.superscreenshot
 //
 #import <UIKit/UIKit.h>
 
-#define XZ_PREFS_DOMAIN     @"com.axs.snapper3zhext"
+#define XZ_PREFS_DOMAIN     @"com.axs.superscreenshot"
 
 // 总开关（设置面板 Root.plist 第一项，Tweak.xm 中生效）
 #define XZ_KEY_MENU_ENABLED     @"Menu_Enabled"
@@ -76,8 +76,8 @@
 #define XZ_PPOCR_SENTINEL  @"__paddleocr__"   // 识别引擎选择器里「内置 PaddleOCR」选中的哨兵 id（不走大模型库）
 
 // 自定义资源目录（用户用 Filza 放入；SpringBoard 可调取）
-#define XZ_PHONE_FRAME_DIR  @"/var/mobile/Documents/com.axs.snapper3zhext/Frames"   // 自定义机框：每机型一个子目录(frame.png + info.json)
-#define XZ_HISTORY_DIR       @"/var/mobile/Documents/com.axs.snapper3zhext/History" // 历史截图缩略图
+#define XZ_PHONE_FRAME_DIR  @"/var/mobile/Documents/com.axs.superscreenshot/Frames"   // 自定义机框：每机型一个子目录(frame.png + info.json)
+#define XZ_HISTORY_DIR       @"/var/mobile/Documents/com.axs.superscreenshot/History" // 历史截图缩略图
 
 // 长截图：帧间重叠比例（0~0.3），Vision 配准失败时的兜底值
 #define XZ_LONG_OVERLAP_DEFAULT  0.50
@@ -90,7 +90,7 @@
 + (NSArray<NSString *> *)ocrLanguages;   // 供 VisionOCR / 翻译/AskAI 三个 plugin 读取识别语言 (v5.23.0 主 OCR 走 BigModel, 此方法保留为 plugin 内部使用)
 + (UIImage *)systemIcon:(NSString *)name;   // SF Symbol 渲染成 UIImage（iOS>=13）
 + (void)toast:(NSString *)msg;              // 顶部轻量提示
-+ (void)sn3AlertError:(NSString *)title message:(NSString *)msg;  // v5.23.0: 弹 alert 提示 (不静默, 用户必须看到)
++ (void)superscreenshotAlertError:(NSString *)title message:(NSString *)msg;  // v5.23.0: 弹 alert 提示 (不静默, 用户必须看到)
 + (UIColor *)accentColor;
 + (UIWindow *)topWindow;
 + (UIWindowScene *)activeWindowScene;   // iOS 13+：弹窗必须挂到 scene 才能显示
@@ -113,16 +113,16 @@
 #pragma mark - v6.07 大模型库解析（tweak 侧）
 
 // 模型库（NSArray<NSDictionary *>），从 XZ_KEY_MODEL_LIB(JSON) 解析；空返回 @[]
-+ (NSArray<NSDictionary *> *)sn3ModelLibrary;
++ (NSArray<NSDictionary *> *)superscreenshotModelLibrary;
 // 按 id 取模型；取不到返回 nil
-+ (NSDictionary *)sn3ModelById:(NSString *)mid;
++ (NSDictionary *)superscreenshotModelById:(NSString *)mid;
 // 从模型 dict 取字段，nil/空时回退默认值（各功能共用，避免各自硬编码 key 顺序）
-+ (NSString *)sn3ModelField:(NSDictionary *)m key:(NSString *)k def:(NSString *)def;
++ (NSString *)superscreenshotModelField:(NSDictionary *)m key:(NSString *)k def:(NSString *)def;
 // 各功能当前选中的模型配置（含 baseURL/apiKey/model）；未选返回 nil
-+ (NSDictionary *)sn3AIConfig;
-+ (NSDictionary *)sn3OCRConfig;
-+ (NSDictionary *)sn3TransConfig;
++ (NSDictionary *)superscreenshotAIConfig;
++ (NSDictionary *)superscreenshotOCRConfig;
++ (NSDictionary *)superscreenshotTransConfig;
 // 一次性迁移：把旧的 AskAI_* / BigModel_* 配置并入模型库，避免「误点即崩」+ 老用户配置不丢
-+ (void)sn3MigrateModelsIfNeeded;
++ (void)superscreenshotMigrateModelsIfNeeded;
 
 @end

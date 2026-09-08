@@ -7,5 +7,5 @@
 //
 #import <UIKit/UIKit.h>
 
-@interface SN3ToolbarOrderController : UIViewController
+@interface SuperScreenshotToolbarOrderController : UIViewController
 @end

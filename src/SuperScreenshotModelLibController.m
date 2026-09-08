@@ -1,23 +1,23 @@
 //
-//  SN3ModelLibController.m — 大模型库管理（自包含，NSUserDefaults + UIKit）
+//  SuperScreenshotModelLibController.m — 大模型库管理（自包含，NSUserDefaults + UIKit）
 //  列表 / 新建 / 从预设一键导入 / 编辑 / 删除。识别引擎 / 问AI / 翻译 在各自设置里选「使用模型」。
 //
-#import "SN3ModelStore.h"
+#import "SuperScreenshotModelStore.h"
 
-@interface SN3ModelLibController () <UITableViewDelegate, UITableViewDataSource>
+@interface SuperScreenshotModelLibController () <UITableViewDelegate, UITableViewDataSource>
 @property (nonatomic, strong) UITableView *tv;
 @property (nonatomic, strong) NSMutableArray<NSDictionary *> *models;
 @property (nonatomic, strong) NSString *editingId;   // 编辑中模型的 id（新建为 nil）
 @end
 
-@implementation SN3ModelLibController
+@implementation SuperScreenshotModelLibController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"大模型库";
     self.view.backgroundColor = [UIColor systemBackgroundColor];
-    SN3MigrateIfNeeded();
-    self.models = [SN3LoadModels() mutableCopy];
+    SuperScreenshotMigrateIfNeeded();
+    self.models = [SuperScreenshotLoadModels() mutableCopy];
 
     self.tv = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
     self.tv.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -40,7 +40,7 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    self.models = [SN3LoadModels() mutableCopy];
+    self.models = [SuperScreenshotLoadModels() mutableCopy];
     [self.tv reloadData];
 }
 
@@ -52,9 +52,9 @@
     UITableViewCell *c = [tv dequeueReusableCellWithIdentifier:@"m"];
     if (!c) c = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"m"];
     NSDictionary *m = self.models[ip.row];
-    c.textLabel.text = SN3ModelField(m, @"name", @"(未命名)");
-    NSString *v = SN3ModelField(m, @"vendor", @"");
-    NSString *md = SN3ModelField(m, @"model", @"");
+    c.textLabel.text = SuperScreenshotModelField(m, @"name", @"(未命名)");
+    NSString *v = SuperScreenshotModelField(m, @"vendor", @"");
+    NSString *md = SuperScreenshotModelField(m, @"model", @"");
     c.detailTextLabel.text = [NSString stringWithFormat:@"%@ · %@", v.length?v:@"自定义", md.length?md:@"未设模型"];
     c.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     return c;
@@ -64,19 +64,19 @@
     [tv deselectRowAtIndexPath:ip animated:YES];
     NSDictionary *m = self.models[ip.row];
     self.editingId = m[@"id"];
-    [self presentEditAlertWithName:SN3ModelField(m,@"name",@"") base:SN3ModelField(m,@"baseURL",@"")
-                                key:SN3ModelField(m,@"apiKey",@"") model:SN3ModelField(m,@"model",@"")
-                              vendor:SN3ModelField(m,@"vendor",@"")];
+    [self presentEditAlertWithName:SuperScreenshotModelField(m,@"name",@"") base:SuperScreenshotModelField(m,@"baseURL",@"")
+                                key:SuperScreenshotModelField(m,@"apiKey",@"") model:SuperScreenshotModelField(m,@"model",@"")
+                              vendor:SuperScreenshotModelField(m,@"vendor",@"")];
 }
 
 - (void)tableView:(UITableView *)tv commitEditingStyle:(UITableViewCellEditingStyle)st forRowAtIndexPath:(NSIndexPath *)ip {
     if (st != UITableViewCellEditingStyleDelete) return;
     NSString *mid = self.models[ip.row][@"id"];
     [self.models removeObjectAtIndex:ip.row];
-    SN3SaveModels(self.models);
+    SuperScreenshotSaveModels(self.models);
     // 若某功能正用着被删的模型，清空其选择
-    NSUserDefaults *d = SN3Defs();
-    for (NSString *k in @[SN3_K_AI, SN3_K_OCR, SN3_K_TRANS]) {
+    NSUserDefaults *d = SuperScreenshotDefs();
+    for (NSString *k in @[SuperScreenshot_K_AI, SuperScreenshot_K_OCR, SuperScreenshot_K_TRANS]) {
         if ([[d stringForKey:k] isEqualToString:mid]) [d setObject:@"" forKey:k];
     }
     [tv deleteRowsAtIndexPaths:@[ip] withRowAnimation:UITableViewRowAnimationAutomatic];
@@ -103,7 +103,7 @@
     UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"选择预设厂商"
                                                                   message:@"导入后填 API Key 即可用"
                                                            preferredStyle:UIAlertControllerStyleActionSheet];
-    for (NSDictionary *p in SN3Presets()) {
+    for (NSDictionary *p in SuperScreenshotPresets()) {
         [sheet addAction:[UIAlertAction actionWithTitle:p[@"name"] style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){
             self.editingId = nil;
             [self presentEditAlertWithName:p[@"name"] base:p[@"baseURL"] key:@"" model:p[@"model"] vendor:p[@"vendor"]];
@@ -133,7 +133,7 @@
         if (!b.length) b = @"https://api.deepseek.com/v1";
         if (!m2.length) m2 = @"deepseek-chat";
         NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-        dict[@"id"]     = self.editingId ?: SN3NewUUID();
+        dict[@"id"]     = self.editingId ?: SuperScreenshotNewUUID();
         dict[@"name"]   = n;
         dict[@"baseURL"]= b;
         dict[@"apiKey"] = k2;
@@ -143,7 +143,7 @@
         NSInteger idx = -1;
         for (NSInteger i=0;i<self.models.count;i++) if ([self.models[i][@"id"] isEqualToString:dict[@"id"]]) { idx=i; break; }
         if (idx>=0) self.models[idx] = dict; else [self.models addObject:dict];
-        SN3SaveModels(self.models);
+        SuperScreenshotSaveModels(self.models);
         [self.tv reloadData];
     }]];
     [ac addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];

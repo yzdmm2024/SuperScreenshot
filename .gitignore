@@ -7,4 +7,5 @@ packages/
 
 # 系统/编辑器
 .DS_Store
-*.swp
+*.swp构建中间/
+输出成品/

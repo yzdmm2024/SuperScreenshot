@@ -1,5 +1,5 @@
 //
-//  SN3License.h — 设备授权（UDID 解锁码验证）
+//  SuperScreenshotLicense.h — 设备授权（UDID 解锁码验证）
 //
 //  算法（与「验证的逻辑/gen_license.py」「dylib_GC函数.m」完全一致）：
 //    解锁码 = SHA256(UDID) → 取前 15 字节 → 映射到 56 字符集 → 15 位解锁码
@@ -8,7 +8,7 @@
 //
 //  设计要点：
 //  · 完全自包含，不依赖 Common（prefs bundle 不编 Common.m，避免符号缺失）。
-//  · 解锁状态存 NSUserDefaults(suite=com.axs.snapper3zhext) 键 License_Unlocked，
+//  · 解锁状态存 NSUserDefaults(suite=com.axs.superscreenshot) 键 License_Unlocked，
 //    与插件其它偏好同一域，tweak(SpringBoard) 与 prefs(设置) 可共享读写。
 //  · 弹窗一律直接 present 在「调用方的 VC」上（presentVerificationInViewController:），
 //    绝不自建抢 key 的 host 窗口 —— 彻底避开「自建 UIWindow + makeKeyAndVisible 导致
@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@interface SN3License : NSObject
+@interface SuperScreenshotLicense : NSObject
 
 + (NSString *)deviceUDID;                 // 真实设备 UDID（MGCopyAnswer + 降级）
 + (NSString *)expectedCode;               // SHA256(UDID) → 15 位解锁码

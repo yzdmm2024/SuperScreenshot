@@ -7,9 +7,9 @@
 	<key>CFBundleDisplayName</key>
 	<string>超级截图</string>
 	<key>CFBundleExecutable</key>
-	<string>Snapper3ZhExtPrefs</string>
+	<string>SuperScreenshotPrefs</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.axs.snapper3zhext.prefs</string>
+	<string>com.axs.superscreenshot.prefs</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -19,6 +19,6 @@
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>NSPrincipalClass</key>
-	<string>SN3PrefsController</string>
+	<string>SuperScreenshotPrefsController</string>
 </dict>
 </plist>

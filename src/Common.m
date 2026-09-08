@@ -122,16 +122,16 @@
 //        · 显式 frame、hidden=NO（不抢 SpringBoard 的 key window）
 //        · 单例持有窗口，关闭按钮/点空白处 确定性回收，无残留
 //        · Alert+600(≈2600) 天然盖过工具栏面板(_panelWin≈2000)与选区窗(≈1990) → 可见且可点
-+ (void)sn3AlertError:(NSString *)title message:(NSString *)msg {
++ (void)superscreenshotAlertError:(NSString *)title message:(NSString *)msg {
     NSString *t = title.length ? title : @"出错了";
     NSString *m = msg.length ? msg : @"未知错误";
-    NSLog(@"[SN3] sn3AlertError: %@ / %@", t, m);
+    NSLog(@"[SuperScreenshot] superscreenshotAlertError: %@ / %@", t, m);
     [self runOnMain:^{
         @try {
             [ResultWindow showWithTitle:t text:m image:nil];
         } @catch (NSException *e) {
             // 兜底：走已有 @try/@catch 保护的 present:fromWindow: 通道（proven 路径）
-            NSLog(@"[SN3] sn3AlertError ResultWindow 异常，降级 alert: %@ %@", e.name, e.reason);
+            NSLog(@"[SuperScreenshot] superscreenshotAlertError ResultWindow 异常，降级 alert: %@ %@", e.name, e.reason);
             @try {
                 UIAlertController *a = [UIAlertController alertControllerWithTitle:t
                                                                           message:m
@@ -141,7 +141,7 @@
                                                    handler:nil]];
                 [self present:a fromWindow:[self topWindow]];
             } @catch (NSException *e2) {
-                NSLog(@"[SN3] sn3AlertError 降级仍失败: %@ %@", e2.name, e2.reason);
+                NSLog(@"[SuperScreenshot] superscreenshotAlertError 降级仍失败: %@ %@", e2.name, e2.reason);
             }
         }
     }];
@@ -217,10 +217,10 @@
                 // 弹窗由系统自然浮在工具栏之上, 且 dismiss 后正常清理, 无残留(修复「关不掉」)。
                 [host presentViewController:vc animated:YES completion:nil];
             } else {
-                NSLog(@"[SN3] present failed: no host view controller");
+                NSLog(@"[SuperScreenshot] present failed: no host view controller");
             }
         } @catch (NSException *e) {
-            NSLog(@"[SN3] present exception: %@ %@", e.name, e.reason);
+            NSLog(@"[SuperScreenshot] present exception: %@ %@", e.name, e.reason);
         }
     });
 }
@@ -237,9 +237,9 @@
 #pragma mark - v6.07 大模型库解析
 
 // v6.09 加固：偏好里的 JSON 可能被误编辑/写坏/被别的版本写成别的结构。
-// 只要有一个元素不是字典，旧实现在 sn3ModelById: 里就会 [非字典 objectForKey:] →
+// 只要有一个元素不是字典，旧实现在 superscreenshotModelById: 里就会 [非字典 objectForKey:] →
 // unrecognized selector → SpringBoard 崩。这里逐元素过滤，只放行真正的字典。
-+ (NSArray<NSDictionary *> *)sn3ModelLibrary {
++ (NSArray<NSDictionary *> *)superscreenshotModelLibrary {
     NSString *json = [self stringPref:XZ_KEY_MODEL_LIB default:@""];
     if (![json isKindOfClass:[NSString class]] || !json.length) return @[];
     NSData *d = [json dataUsingEncoding:NSUTF8StringEncoding];
@@ -249,7 +249,7 @@
         NSError *e = nil;
         obj = [NSJSONSerialization JSONObjectWithData:d options:NSJSONReadingMutableContainers error:&e];
     } @catch (NSException *ex) {
-        NSLog(@"[SN3] sn3ModelLibrary JSON 解析异常: %@", ex.reason);
+        NSLog(@"[SuperScreenshot] superscreenshotModelLibrary JSON 解析异常: %@", ex.reason);
         return @[];
     }
     if (![obj isKindOfClass:[NSArray class]]) return @[];
@@ -260,7 +260,7 @@
     return clean;
 }
 
-+ (void)sn3SetModelLibrary:(NSArray *)arr {
++ (void)superscreenshotSetModelLibrary:(NSArray *)arr {
     NSError *e = nil;
     NSData *d = [NSJSONSerialization dataWithJSONObject:arr ?: @[] options:0 error:&e];
     NSString *json = d ? [[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding] : @"";
@@ -269,21 +269,21 @@
 
 // v6.09 加固：id 字段可能不是字符串（NSNumber/NSNull/嵌套容器）。
 // 旧实现直接 isEqualToString: → unrecognized selector → 崩。这里先做类型校验。
-+ (NSDictionary *)sn3ModelById:(NSString *)mid {
++ (NSDictionary *)superscreenshotModelById:(NSString *)mid {
     if (![mid isKindOfClass:[NSString class]] || !mid.length) return nil;
-    for (NSDictionary *m in [self sn3ModelLibrary]) {
+    for (NSDictionary *m in [self superscreenshotModelLibrary]) {
         id v = [m objectForKey:@"id"];
         if ([v isKindOfClass:[NSString class]] && [(NSString *)v isEqualToString:mid]) return m;
     }
     return nil;
 }
 
-+ (NSDictionary *)sn3AIConfig    { [self sn3MigrateModelsIfNeeded]; return [self sn3ModelById:[self stringPref:XZ_KEY_MODEL_AI    default:@""]]; }
-+ (NSDictionary *)sn3OCRConfig   { [self sn3MigrateModelsIfNeeded]; return [self sn3ModelById:[self stringPref:XZ_KEY_MODEL_OCR   default:@""]]; }
-+ (NSDictionary *)sn3TransConfig { [self sn3MigrateModelsIfNeeded]; return [self sn3ModelById:[self stringPref:XZ_KEY_MODEL_TRANS default:@""]]; }
++ (NSDictionary *)superscreenshotAIConfig    { [self superscreenshotMigrateModelsIfNeeded]; return [self superscreenshotModelById:[self stringPref:XZ_KEY_MODEL_AI    default:@""]]; }
++ (NSDictionary *)superscreenshotOCRConfig   { [self superscreenshotMigrateModelsIfNeeded]; return [self superscreenshotModelById:[self stringPref:XZ_KEY_MODEL_OCR   default:@""]]; }
++ (NSDictionary *)superscreenshotTransConfig { [self superscreenshotMigrateModelsIfNeeded]; return [self superscreenshotModelById:[self stringPref:XZ_KEY_MODEL_TRANS default:@""]]; }
 
 // v6.09 加固：m 传进来的可能不是字典（上游取值失败/结构被写坏），先校验再取值。
-+ (NSString *)sn3ModelField:(NSDictionary *)m key:(NSString *)k def:(NSString *)def {
++ (NSString *)superscreenshotModelField:(NSDictionary *)m key:(NSString *)k def:(NSString *)def {
     if (![m isKindOfClass:[NSDictionary class]] || ![k isKindOfClass:[NSString class]]) return def;
     id v = [m objectForKey:k];
     return ([v isKindOfClass:[NSString class]] && [(NSString *)v length]) ? (NSString *)v : def;
@@ -291,11 +291,11 @@
 
 // 一次性迁移：把旧的 AskAI_* / BigModel_* 配置并入模型库，老用户配置不丢，
 // 也避免「三个功能各填一套、误点某项 BaseURL 就把 OCR/AI 一起带崩」。
-+ (void)sn3MigrateModelsIfNeeded {
++ (void)superscreenshotMigrateModelsIfNeeded {
     if ([self boolPref:XZ_KEY_MODEL_MIGRATED default:NO]) return;
     [self setPref:XZ_KEY_MODEL_MIGRATED value:@YES];
 
-    NSMutableArray *lib = [[self sn3ModelLibrary] mutableCopy];
+    NSMutableArray *lib = [[self superscreenshotModelLibrary] mutableCopy];
     BOOL changed = NO;
 
     // 问 AI（OpenAI 兼容）
@@ -303,7 +303,7 @@
     NSString *aiURL  = [self stringPref:XZ_KEY_AI_BASEURL default:@""];
     NSString *aiModel= [self stringPref:XZ_KEY_AI_MODEL   default:@""];
     if (aiKey.length || aiURL.length || aiModel.length) {
-        if (![self sn3ModelById:@"mig_ai"]) {
+        if (![self superscreenshotModelById:@"mig_ai"]) {
             [lib addObject:@{@"id":@"mig_ai", @"name":@"我的对话模型",
                              @"baseURL":aiURL.length?aiURL:@"https://api.deepseek.com/v1",
                              @"apiKey":aiKey, @"model":aiModel.length?aiModel:@"deepseek-chat",
@@ -318,7 +318,7 @@
     NSString *bmURL  = [self stringPref:XZ_KEY_BM_BASEURL default:@""];
     NSString *bmModel= [self stringPref:XZ_KEY_BM_MODEL   default:@""];
     if (bmKey.length || bmURL.length || bmModel.length) {
-        if (![self sn3ModelById:@"mig_ocr"]) {
+        if (![self superscreenshotModelById:@"mig_ocr"]) {
             [lib addObject:@{@"id":@"mig_ocr", @"name":@"智谱 BigModel (识别)",
                              @"baseURL":bmURL.length?bmURL:@"https://open.bigmodel.cn/api/paas/v4",
                              @"apiKey":bmKey, @"model":bmModel.length?bmModel:@"glm-4v-flash",
@@ -328,7 +328,7 @@
         }
     }
 
-    if (changed) [self sn3SetModelLibrary:lib];
+    if (changed) [self superscreenshotSetModelLibrary:lib];
 }
 
 @end

@@ -27,7 +27,7 @@
 + (void)_ppocrJobsPollJob:(NSString *)jobId baseURL:(NSURL *)u token:(NSString *)token scaleX:(CGFloat)sx scaleY:(CGFloat)sy attempt:(NSInteger)attempt completion:(void (^)(NSArray<NSDictionary *> *, NSString *))completion;
 + (void)_ppocrFetchResult:(NSString *)jsonl scaleX:(CGFloat)sx scaleY:(CGFloat)sy completion:(void (^)(NSArray<NSDictionary *> *, NSString *))completion;
 + (void)_ppocrSyncWithURL:(NSURL *)u token:(NSString *)token jpeg:(NSData *)jpeg scaleX:(CGFloat)sx scaleY:(CGFloat)sy completion:(void (^)(NSArray<NSDictionary *> *, NSString *))completion;
-+ (CGRect)_sn3RectFromPaddlePoly:(id)poly;
++ (CGRect)_superscreenshotRectFromPaddlePoly:(id)poly;
 @end
 
 #import <Vision/Vision.h>
@@ -56,7 +56,7 @@
              completion:(void (^)(NSArray<NSDictionary *> *items))completion;
 + (void)ocrObservations:(UIImage *)image languages:(NSArray *)langs
              completion:(void (^)(NSArray<NSDictionary *> *items))completion;
-+ (NSArray<NSDictionary *> *)_sn3SortItemsByReadingOrder:(NSArray<NSDictionary *> *)items; // v6.20.3
++ (NSArray<NSDictionary *> *)_superscreenshotSortItemsByReadingOrder:(NSArray<NSDictionary *> *)items; // v6.20.3
 + (UIImage *)bdShrink:(UIImage *)src maxDim:(CGFloat)maxDim;                     // v5.13
 + (void)detectSensitiveRects:(UIImage *)image
                   completion:(void (^)(NSArray<NSValue *> *rects))completion;
@@ -103,7 +103,7 @@ static CGRect XZRectFromValue(id v) {
 #pragma mark - 0. OCR 阅读顺序重排（v6.20.3）
 // 按人类阅读顺序重排：有效 box 的块按「中心 y 聚类成行 + 行内按中心 x 升序」排序；
 // 无坐标(全 Zero)的块保持原相对顺序并置于末尾。对单列竖向截图几乎完美。
-+ (NSArray<NSDictionary *> *)_sn3SortItemsByReadingOrder:(NSArray<NSDictionary *> *)items {
++ (NSArray<NSDictionary *> *)_superscreenshotSortItemsByReadingOrder:(NSArray<NSDictionary *> *)items {
     if (!items || items.count < 2) return items ?: @[];
     NSMutableArray<NSDictionary *> *valid = [NSMutableArray array];
     NSMutableArray<NSDictionary *> *invalid = [NSMutableArray array];
@@ -166,7 +166,7 @@ static CGRect XZRectFromValue(id v) {
 }
 
 // v6.20.3：PaddleOCR 结果里的坐标可能是 4 点多边形 [[x,y]×4] 或 [x,y,w,h]，统一转成 CGRect
-+ (CGRect)_sn3RectFromPaddlePoly:(id)poly {
++ (CGRect)_superscreenshotRectFromPaddlePoly:(id)poly {
     if (![poly isKindOfClass:[NSArray class]]) return CGRectZero;
     NSArray *a = (NSArray *)poly;
     if (a.count == 4) {
@@ -214,11 +214,11 @@ static CGRect XZRectFromValue(id v) {
         if (err.length) {
             // 失败弹 alert (不静默, 不 fallback, 不回退本地/百度)
             dispatch_async(dispatch_get_main_queue(), ^{
-                [Common sn3AlertError:@"OCR 失败" message:err];
+                [Common superscreenshotAlertError:@"OCR 失败" message:err];
             });
         }
         // v6.20.3：交付前按阅读顺序重排（智能脱敏等下游按 box+text 绑定关系使用，重排不影响其正确性）
-        if (completion) completion([self _sn3SortItemsByReadingOrder:items]);
+        if (completion) completion([self _superscreenshotSortItemsByReadingOrder:items]);
     }];
 }
 
@@ -242,9 +242,9 @@ static CGRect XZRectFromValue(id v) {
         return;
     }
     // v6.07：识别引擎改走「大模型库」——从 ModelOCR_ID 取选中的模型配置
-    NSDictionary *cfg = [Common sn3OCRConfig];
+    NSDictionary *cfg = [Common superscreenshotOCRConfig];
     // v6.13：大模型库里选中的识别模型若是「百度 PaddleOCR」，直接走独立免费通道
-    if ([[Common sn3ModelField:cfg key:@"vendor" def:@""] isEqualToString:@"paddleocr"]) {
+    if ([[Common superscreenshotModelField:cfg key:@"vendor" def:@""] isEqualToString:@"paddleocr"]) {
         [self ocrViaPPOCR:image completion:completion];
         return;
     }
@@ -256,9 +256,9 @@ static CGRect XZRectFromValue(id v) {
         }
         return;
     }
-    NSString *bu   = [Common sn3ModelField:cfg key:@"baseURL" def:@"https://open.bigmodel.cn/api/paas/v4"];
-    NSString *key  = [Common sn3ModelField:cfg key:@"apiKey"  def:@""];
-    NSString *md   = [Common sn3ModelField:cfg key:@"model"   def:@"glm-4v-flash"];
+    NSString *bu   = [Common superscreenshotModelField:cfg key:@"baseURL" def:@"https://open.bigmodel.cn/api/paas/v4"];
+    NSString *key  = [Common superscreenshotModelField:cfg key:@"apiKey"  def:@""];
+    NSString *md   = [Common superscreenshotModelField:cfg key:@"model"   def:@"glm-4v-flash"];
     NSString *pr   = [Common stringPref:XZ_KEY_BM_PROMPT default:@""];
 
     if (!key.length) {
@@ -292,7 +292,7 @@ static CGRect XZRectFromValue(id v) {
     [AskAIEngine askMessages:messages baseURL:bu apiKey:key model:md
                   completion:^(NSString *answer, NSString *err) {
         if (err.length) {
-            NSLog(@"[SN3] BigModel OCR failed: %@", err);
+            NSLog(@"[SuperScreenshot] BigModel OCR failed: %@", err);
             if (completion) completion(nil, err);
             return;
         }
@@ -380,7 +380,7 @@ static CGRect XZRectFromValue(id v) {
 + (void)_ppocrJobsSubmitURL:(NSURL *)u token:(NSString *)token model:(NSString *)model
                         jpeg:(NSData *)jpeg scaleX:(CGFloat)sx scaleY:(CGFloat)sy attempt:(NSInteger)attempt
                    completion:(void (^)(NSArray<NSDictionary *> *, NSString *))completion {
-    NSString *boundary = @"----SN3PaddleOCRBoundary7Q2k9X";
+    NSString *boundary = @"----SuperScreenshotPaddleOCRBoundary7Q2k9X";
     NSMutableData *body = [NSMutableData data];
     void (^appendField)(NSString *, NSString *) = ^(NSString *name, NSString *value) {
         [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
@@ -542,7 +542,7 @@ static CGRect XZRectFromValue(id v) {
                     id x = texts[ti];
                     if (![x isKindOfClass:[NSString class]] || ![x length]) continue;
                     CGRect box = CGRectZero;
-                    if ((NSUInteger)ti < polys.count) box = [self _sn3RectFromPaddlePoly:polys[ti]];
+                    if ((NSUInteger)ti < polys.count) box = [self _superscreenshotRectFromPaddlePoly:polys[ti]];
                     if (box.size.width > 0 && box.size.height > 0) {
                         // 缩图坐标 → 原图坐标（脱敏需原图坐标，排序只关心相对位置）
                         box = CGRectMake(box.origin.x * sx, box.origin.y * sy,
@@ -640,7 +640,7 @@ static CGRect XZRectFromValue(id v) {
             if (![t isKindOfClass:[NSString class]] || !t.length) continue;
             CGRect box = CGRectZero;
             id poly = kv[@"poly"];
-            if (poly && poly != [NSNull null]) box = [self _sn3RectFromPaddlePoly:poly];
+            if (poly && poly != [NSNull null]) box = [self _superscreenshotRectFromPaddlePoly:poly];
             if (box.size.width > 0 && box.size.height > 0) {
                 box = CGRectMake(box.origin.x * sx, box.origin.y * sy,
                                  box.size.width * sx, box.size.height * sy);
@@ -660,7 +660,7 @@ static CGRect XZRectFromValue(id v) {
 }
 
 // v6.13：把各种可能的文字数组（字符串数组 / {text:..} 对象数组）拍平成 NSString 列表
-+ (NSArray<NSString *> *)_sn3FlattenTexts:(id)texts {
++ (NSArray<NSString *> *)_superscreenshotFlattenTexts:(id)texts {
     NSMutableArray<NSString *> *out = [NSMutableArray array];
     if (![texts isKindOfClass:[NSArray class]]) return out;
     for (id x in (NSArray *)texts) {
@@ -733,11 +733,11 @@ static CGRect XZRectFromValue(id v) {
 // 网络翻译入口。v6.07：若「大模型库」里翻译功能选了模型，则走该模型（chat 补全，提示词翻译）；
 // 否则回退旧的百度翻译 API（设置里填了 APP ID/KEY 即用），再不行回退 gtx（国内常被墙）。
 + (void)translateText:(NSString *)text completion:(void (^)(NSString *dst, NSString *err))completion {
-    NSDictionary *cfg = [Common sn3TransConfig];
+    NSDictionary *cfg = [Common superscreenshotTransConfig];
     if (cfg) {
-        NSString *bu  = [Common sn3ModelField:cfg key:@"baseURL" def:@"https://api.openai.com/v1"];
-        NSString *key = [Common sn3ModelField:cfg key:@"apiKey"  def:@""];
-        NSString *md  = [Common sn3ModelField:cfg key:@"model"   def:@"gpt-4o-mini"];
+        NSString *bu  = [Common superscreenshotModelField:cfg key:@"baseURL" def:@"https://api.openai.com/v1"];
+        NSString *key = [Common superscreenshotModelField:cfg key:@"apiKey"  def:@""];
+        NSString *md  = [Common superscreenshotModelField:cfg key:@"model"   def:@"gpt-4o-mini"];
         if (!key.length) {
             if (completion) completion(nil, @"翻译所选模型未填 API Key：请到「设置 → 大模型库」编辑该模型填入 Key。");
             return;
@@ -948,7 +948,7 @@ static CGRect XZRectFromValue(id v) {
                 }
             }
         } @catch (NSException *e) {
-            NSLog(@"[SN3] QR CIDetector exception: %@", e);
+            NSLog(@"[SuperScreenshot] QR CIDetector exception: %@", e);
         }
 
         // ② 没扫到二维码 → 用 Vision 扫其他条码（EAN / Code128 / PDF417 等）
@@ -992,7 +992,7 @@ static CGRect XZRectFromValue(id v) {
                     }
                 }
             } @catch (NSException *e) {
-                NSLog(@"[SN3] barcode exception: %@", e);
+                NSLog(@"[SuperScreenshot] barcode exception: %@", e);
             }
         }
 
@@ -1376,7 +1376,7 @@ static UIWindow *_floatWin = nil;
     if (!image) { if (completion) completion(NO); return; }
     // v6.20.5：所有保存统一走自定义相册「超级截图」，不再只进相机胶卷
     [ImageUtils saveToCustomAlbum:image completion:^(BOOL ok, NSError *e) {
-        if (e) NSLog(@"[SN3] save to album failed: %@", e);
+        if (e) NSLog(@"[SuperScreenshot] save to album failed: %@", e);
         if (completion) completion(ok);
     }];
 }
@@ -1409,7 +1409,7 @@ static UIWindow *_floatWin = nil;
     return [[UIApplication sharedApplication] openURL:url];
 }
 
-+ (NSArray<NSDictionary *> *)sn3LaunchApps {
++ (NSArray<NSDictionary *> *)superscreenshotLaunchApps {
     NSUserDefaults *d = [[NSUserDefaults alloc] initWithSuiteName:XZ_PREFS_DOMAIN];
     NSArray *raw = [d arrayForKey:XZ_KEY_LAUNCH_APPS];
     NSMutableArray<NSDictionary *> *out = [NSMutableArray array];

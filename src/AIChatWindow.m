@@ -48,7 +48,7 @@
         if (image) {
             // v6.20.4：带图问 AI —— 首条 user 消息写成多模态数组（文字 + 图片），
             // AskAIEngine 原样把 messages 塞进 JSON，OpenAI 兼容视觉模型即可看图。
-            NSString *dataURL = [[self class] sn3ImageDataURL:image];
+            NSString *dataURL = [[self class] superscreenshotImageDataURL:image];
             NSMutableArray<NSDictionary *> *parts = [NSMutableArray array];
             if (firstText.length) [parts addObject:@{ @"type" : @"text", @"text" : firstText }];
             if (dataURL.length)  [parts addObject:@{ @"type" : @"image_url", @"image_url" : @{ @"url" : dataURL } }];
@@ -206,7 +206,7 @@
 }
 
 // v6.20.4：把 UIImage 压成 JPEG data URL（长边缩到 2048，质量 0.8），供视觉模型多模态输入。
-+ (NSString *)sn3ImageDataURL:(UIImage *)image {
++ (NSString *)superscreenshotImageDataURL:(UIImage *)image {
     if (!image) return nil;
     CGFloat maxSide = 2048;
     CGFloat w = image.size.width, h = image.size.height;
@@ -226,16 +226,16 @@
     self.busy = YES;
     self.sendBtn.enabled = NO;
     // v6.07：问 AI 改走「大模型库」——从 ModelAI_ID 取选中的模型配置
-    NSDictionary *cfg = [Common sn3AIConfig];
+    NSDictionary *cfg = [Common superscreenshotAIConfig];
     if (!cfg) {
         self.busy = NO;
         self.sendBtn.enabled = YES;
         self.textView.text = [NSString stringWithFormat:@"%@\n\n【提示】尚未选择 AI 模型：请到「设置 → 大模型库 → 问AI·使用模型」选一个模型（也可一键导入 DeepSeek / OpenAI / 智谱 等预设）。", [self renderedConversation]];
         return;
     }
-    NSString *base  = [Common sn3ModelField:cfg key:@"baseURL" def:@"https://api.deepseek.com/v1"];
-    NSString *key   = [Common sn3ModelField:cfg key:@"apiKey"  def:@""];
-    NSString *model = [Common sn3ModelField:cfg key:@"model"   def:@"deepseek-chat"];
+    NSString *base  = [Common superscreenshotModelField:cfg key:@"baseURL" def:@"https://api.deepseek.com/v1"];
+    NSString *key   = [Common superscreenshotModelField:cfg key:@"apiKey"  def:@""];
+    NSString *model = [Common superscreenshotModelField:cfg key:@"model"   def:@"deepseek-chat"];
     if (!key.length) {
         self.busy = NO;
         self.sendBtn.enabled = YES;
