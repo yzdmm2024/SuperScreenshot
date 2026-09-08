@@ -100,7 +100,9 @@
         l.textColor = [UIColor whiteColor];
         l.font = [UIFont systemFontOfSize:15 weight:UIFontWeightMedium];
         l.textAlignment = NSTextAlignmentCenter;
-        l.backgroundColor = [UIColor colorWithWhite:0 alpha:0.85];
+        l.backgroundColor = [UIColor clearColor];
+        l.shadowColor = [UIColor colorWithWhite:0 alpha:0.8];
+        l.shadowOffset = CGSizeMake(0, 1);
         l.layer.cornerRadius = 12;
         l.layer.masksToBounds = YES;
         [w addSubview:l];

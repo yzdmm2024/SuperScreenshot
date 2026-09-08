@@ -242,7 +242,7 @@ static int SN3_LoopKVOContext = 0;
     [self refreshChrome];
 
     _win.hidden = NO;
-    [Common toast:@"拖出要截取的区域，可拖动/缩放调整，点「✓完成」编辑"];
+    // v6.21：呼出截图时的一次性引导 toast 已取消（用户反馈不需要）
     NSLog(@"[SN3] mask window A shown (v4.8)");
 }
 
@@ -436,7 +436,9 @@ static int SN3_LoopKVOContext = 0;
     _hintLabel.textColor = [UIColor whiteColor];
     _hintLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
     _hintLabel.textAlignment = NSTextAlignmentCenter;
-    _hintLabel.backgroundColor = [UIColor colorWithWhite:0 alpha:0.4];
+    _hintLabel.backgroundColor = [UIColor clearColor];
+    _hintLabel.shadowColor = [UIColor colorWithWhite:0 alpha:0.7];
+    _hintLabel.shadowOffset = CGSizeMake(0, 1);
     _hintLabel.text = @"拖框选区域，可拖动/缩放调整，点「✓完成」编辑 · 底部可切「正常/长截图」";
     [_win addSubview:_hintLabel];
     [_win addInteractiveView:_hintLabel];
