@@ -57,7 +57,19 @@ jobs:
           echo "检查: $BIN"
           python3 tools/check_undef_symbols.py "$BIN" src
 
-      - name: Package deb manually
+      # v6.20.16：控制中心模块按钮的图标来自 bundle 内的 Assets.car（系统 CC 不读散装 PNG）。
+      # 用 macOS runner 自带的 actool 把 cc_assets/Assets.xcassets 编译进 CC bundle。
+      - name: Compile CC module Assets.car
+        run: |
+          xcrun actool --compress-pngs \
+            --platform iphoneos --minimum-deployment-target 14.0 \
+            --output-partial-info-plist /tmp/actool_partial.plist \
+            --compile "layout/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle" \
+            "cc_assets/Assets.xcassets"
+          test -f "layout/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle/Assets.car" || { echo "FATAL: Assets.car not generated"; exit 1; }
+          ls -la "layout/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle/Assets.car"
+
+      - name: Package deb manual
         run: |
           VERSION=$(grep '^Version:' control | awk '{print $2}')
           mkdir -p stage/DEBIAN
@@ -93,6 +105,7 @@ jobs:
           test -f stage/var/jb/Library/PreferenceBundles/SuperScreenshotPrefs.bundle/SuperScreenshotPrefs || { echo "FATAL: prefs executable missing"; exit 1; }
           test -f stage/var/jb/Library/PreferenceBundles/SuperScreenshotPrefs.bundle/Root.plist || { echo "FATAL: Root.plist missing"; exit 1; }
           test -f stage/var/jb/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle/SuperScreenshotCCModule || { echo "FATAL: CC executable missing"; exit 1; }
+          test -f stage/var/jb/Library/ControlCenter/Bundles/SuperScreenshotCCModule.bundle/Assets.car || { echo "FATAL: CC Assets.car missing (图标没编进去)"; exit 1; }
           # v6.18：已移除 companion App 自检（套壳已撤销）。
           plutil -extract NSPrincipalClass raw stage/var/jb/Library/PreferenceBundles/SuperScreenshotPrefs.bundle/Info.plist
 

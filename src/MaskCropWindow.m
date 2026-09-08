@@ -1722,8 +1722,9 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         [self rotateCropImageBy:M_PI_2];
         [self updateLocalPreview];      // v6.05：旋转后立刻刷新左侧预览，让用户看到结果
     } else if (tag == XZLocalCopy) {
+        // v6.20.16：去掉这里的重复提示——SuperTools copy: 内部已 toast「已复制图片到剪贴板」，
+        // 之前再 toast 一条「已复制到剪贴板」，两条叠在一起根本读不清。
         [SuperTools copy:img];
-        [Common toast:@"已复制到剪贴板"];
         [self dismiss];
     } else if (tag == XZLocalFloating) {
         [SuperTools floating:img withScreenRect:_cropRect];

@@ -88,30 +88,43 @@
     return [UIColor blueColor];
 }
 
+// v6.20.16 提示浮层重做：
+//  1) 位置从屏幕顶部移到底部（home indicator 上方）——顶部经常与状态栏/App 标题等
+//     文字重叠看不清，底部为系统 toast 惯用位置，冲突少。
+//  2) 新提示直接替换旧提示（静态引用 + removeFromSuperview）——修复「点复制出现
+//     两条提示叠在一起」（如局部工具栏复制：SuperTools copy: 一条 + 调用方一条）。
+//  3) 纯白字+阴影改为半透明深色胶囊底（alpha 0.72）——透明背景在浅色壁纸上压不住字。
+static UILabel *_xzToastLabel = nil;
+
 + (void)toast:(NSString *)msg {
     dispatch_async(dispatch_get_main_queue(), ^{
         UIWindow *w = [self topWindow];
         if (!w) return;
-        CGFloat h = 46;
+        if (_xzToastLabel) { [_xzToastLabel removeFromSuperview]; _xzToastLabel = nil; }
+        CGFloat h = 40;
         CGFloat ww = w.bounds.size.width;
-        CGFloat off = w.safeAreaInsets.top + 8;
-        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(16, off - h, ww - 32, h)];
+        CGFloat bottom = MAX(w.safeAreaInsets.bottom, 8);
+        CGFloat restY = w.bounds.size.height - bottom - h - 16;
+        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(16, w.bounds.size.height, ww - 32, h)];
         l.text = msg;
         l.textColor = [UIColor whiteColor];
-        l.font = [UIFont systemFontOfSize:15 weight:UIFontWeightMedium];
+        l.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
         l.textAlignment = NSTextAlignmentCenter;
-        l.backgroundColor = [UIColor clearColor];
-        l.shadowColor = [UIColor colorWithWhite:0 alpha:0.8];
-        l.shadowOffset = CGSizeMake(0, 1);
-        l.layer.cornerRadius = 12;
+        l.numberOfLines = 2;
+        l.backgroundColor = [UIColor colorWithWhite:0 alpha:0.72];
+        l.layer.cornerRadius = 14;
         l.layer.masksToBounds = YES;
+        _xzToastLabel = l;
         [w addSubview:l];
-        [UIView animateWithDuration:0.25 delay:0.05 options:UIViewAnimationOptionCurveEaseOut
-                         animations:^{ l.frame = CGRectMake(16, off, ww - 32, h); }
+        [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut
+                         animations:^{ l.frame = CGRectMake(16, restY, ww - 32, h); }
                          completion:^(BOOL fin){
             [UIView animateWithDuration:0.25 delay:1.6 options:UIViewAnimationOptionCurveEaseIn
                              animations:^{ l.alpha = 0; }
-                             completion:^(BOOL f){ [l removeFromSuperview]; }];
+                             completion:^(BOOL f){
+                if (_xzToastLabel == l) _xzToastLabel = nil;
+                [l removeFromSuperview];
+            }];
         }];
     });
 }
