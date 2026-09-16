@@ -103,8 +103,9 @@ static UILabel *_xzToastLabel = nil;
         if (_xzToastLabel) { [_xzToastLabel removeFromSuperview]; _xzToastLabel = nil; }
         CGFloat h = 40;
         CGFloat ww = w.bounds.size.width;
-        CGFloat bottom = MAX(w.safeAreaInsets.bottom, 8);
-        CGFloat restY = w.bounds.size.height - bottom - h - 16;
+        // v6.20.19：提示改到顶部——刘海（safe area top）下方、隔开一点，不再靠近充电口。
+        CGFloat top = MAX(w.safeAreaInsets.top, 44);
+        CGFloat restY = top + 8;
         // v6.20.18：去掉黑色胶囊底，改为「白字 + 黑色柔和文字阴影」；
         //        胶囊宽度贴合文字（sizeThatFits + 左右 padding），不再占满整行。
         UILabel *l = [[UILabel alloc] initWithFrame:CGRectZero];
@@ -132,7 +133,7 @@ static UILabel *_xzToastLabel = nil;
         CGFloat bw = MIN(fit.width + pad, ww - 32);
         CGFloat bx = (ww - bw) / 2;
         CGRect final = CGRectMake(bx, restY, bw, h);
-        l.frame = CGRectMake(bx, w.bounds.size.height, bw, h);
+        l.frame = CGRectMake(bx, -h, bw, h);
         _xzToastLabel = l;
         [w addSubview:l];
         [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut
