@@ -108,15 +108,24 @@ static UILabel *_xzToastLabel = nil;
         // v6.20.18：去掉黑色胶囊底，改为「白字 + 黑色柔和文字阴影」；
         //        胶囊宽度贴合文字（sizeThatFits + 左右 padding），不再占满整行。
         UILabel *l = [[UILabel alloc] initWithFrame:CGRectZero];
-        l.text = msg;
-        l.textColor = [UIColor whiteColor];
         l.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
-        l.textAlignment = NSTextAlignmentCenter;
         l.numberOfLines = 2;
-        // 文字阴影（柔和），浅色/深色壁纸下都压得住；不受 masksToBounds 裁剪
-        l.shadowColor = [UIColor blackColor];
-        l.shadowOffset = CGSizeZero;
-        l.shadowRadius = 3;
+        // 文字阴影（柔和）：UILabel 无 shadowRadius 属性（那是 CALayer 的），直接赋值会编译失败；
+        //        改用 NSAttributedString + NSShadow(blurRadius) 实现真正的柔和阴影，
+        //        浅色/深色壁纸下都压得住字。
+        NSMutableParagraphStyle *ps = [NSMutableParagraphStyle new];
+        ps.alignment = NSTextAlignmentCenter;
+        NSShadow *sh = [NSShadow new];
+        sh.shadowColor = [UIColor blackColor];
+        sh.shadowBlurRadius = 2.5;
+        sh.shadowOffset = CGSizeZero;
+        l.attributedText = [[NSAttributedString alloc] initWithString:msg
+            attributes:@{
+                NSFontAttributeName: l.font,
+                NSForegroundColorAttributeName: [UIColor whiteColor],
+                NSShadowAttributeName: sh,
+                NSParagraphStyleAttributeName: ps,
+            }];
         // 贴合文字宽度
         CGFloat pad = 24;
         CGSize fit = [l sizeThatFits:CGSizeMake(ww - 32 - pad * 2, h - 8)];
