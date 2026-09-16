@@ -105,19 +105,29 @@ static UILabel *_xzToastLabel = nil;
         CGFloat ww = w.bounds.size.width;
         CGFloat bottom = MAX(w.safeAreaInsets.bottom, 8);
         CGFloat restY = w.bounds.size.height - bottom - h - 16;
-        UILabel *l = [[UILabel alloc] initWithFrame:CGRectMake(16, w.bounds.size.height, ww - 32, h)];
+        // v6.20.18：去掉黑色胶囊底，改为「白字 + 黑色柔和文字阴影」；
+        //        胶囊宽度贴合文字（sizeThatFits + 左右 padding），不再占满整行。
+        UILabel *l = [[UILabel alloc] initWithFrame:CGRectZero];
         l.text = msg;
         l.textColor = [UIColor whiteColor];
         l.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
         l.textAlignment = NSTextAlignmentCenter;
         l.numberOfLines = 2;
-        l.backgroundColor = [UIColor colorWithWhite:0 alpha:0.72];
-        l.layer.cornerRadius = 14;
-        l.layer.masksToBounds = YES;
+        // 文字阴影（柔和），浅色/深色壁纸下都压得住；不受 masksToBounds 裁剪
+        l.shadowColor = [UIColor blackColor];
+        l.shadowOffset = CGSizeZero;
+        l.shadowRadius = 3;
+        // 贴合文字宽度
+        CGFloat pad = 24;
+        CGSize fit = [l sizeThatFits:CGSizeMake(ww - 32 - pad * 2, h - 8)];
+        CGFloat bw = MIN(fit.width + pad, ww - 32);
+        CGFloat bx = (ww - bw) / 2;
+        CGRect final = CGRectMake(bx, restY, bw, h);
+        l.frame = CGRectMake(bx, w.bounds.size.height, bw, h);
         _xzToastLabel = l;
         [w addSubview:l];
         [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut
-                         animations:^{ l.frame = CGRectMake(16, restY, ww - 32, h); }
+                         animations:^{ l.frame = final; }
                          completion:^(BOOL fin){
             [UIView animateWithDuration:0.25 delay:1.6 options:UIViewAnimationOptionCurveEaseIn
                              animations:^{ l.alpha = 0; }
