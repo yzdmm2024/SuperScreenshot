@@ -45,6 +45,7 @@ typedef NS_ENUM(NSInteger, ETBTag) {
     ETBTagColorPick  = 15,   // 取色器
     ETBTagReset      = 16,   // 还原原图
     ETBTagLaunchApp  = 21,   // v6.20.9：快捷启动 App（弹层选微信/QQ/闲鱼/自选，秒开）
+    ETBTagWeChatTransfer = 22, // v6.21：微信输入法「隔空传送」直达（低功耗：仅 openURL，无常驻后台）
 };
 
 static const CGFloat kRowH    = 66.0;   // 单排按钮高
@@ -119,7 +120,7 @@ static EditToolbarWindow *_shared = nil;
     NSArray<NSNumber *> *defOrder = @[ @(ETBTagOCR), @(ETBTagTranslate), @(ETBTagDraw), @(ETBTagCodeScan), @(ETBTagAIImage),
                                        @(ETBTagRotate), @(ETBTagCopy), @(ETBTagFloating), @(ETBTagSave),
                                        @(ETBTagShare), @(ETBTagPDF), @(ETBTagCompress), @(ETBTagAIImage),
-                                       @(ETBTagColorPick), @(ETBTagReset), @(ETBTagLaunchApp) ];
+                                       @(ETBTagColorPick), @(ETBTagReset), @(ETBTagLaunchApp), @(ETBTagWeChatTransfer) ];
     NSMutableArray<NSNumber *> *savedOrder = [NSMutableArray array];
     NSString *orderStr = [Common stringPref:XZ_KEY_TB_ORDER default:@""];
     if (orderStr.length) [savedOrder addObjectsFromArray:[orderStr componentsSeparatedByString:@","]];
@@ -236,6 +237,7 @@ static EditToolbarWindow *_shared = nil;
         @(ETBTagColorPick): @{@"icon":@"eyedropper",                  @"label":@"取色"},
         @(ETBTagReset):     @{@"icon":@"arrow.counterclockwise",      @"label":@"还原"},
         @(ETBTagLaunchApp): @{@"icon":@"app.fill",                    @"label":@"启动"},
+        @(ETBTagWeChatTransfer): @{@"icon":@"paperplane.fill",        @"label":@"微信传送"},
     };
 
     BOOL singleRow = ([Common intPref:XZ_KEY_TB_LAYOUT default:0] == 1);
@@ -452,6 +454,11 @@ static EditToolbarWindow *_shared = nil;
     } else if (tag == ETBTagLaunchApp) {
         // v6.20.9：一键秒开微信/QQ/闲鱼等任意 App（弹层选择，图同时入剪贴板可粘贴）
         [self launchAppWithImage:img];
+    } else if (tag == ETBTagWeChatTransfer) {
+        // v6.21：微信输入法「隔空传送」直达。纯 openURL 拉起，无常驻后台、低功耗；
+        //        @try 已由 toolTapped: 外层兜住，绝不因跳转异常导致 SpringBoard 白屏。
+        BOOL opened = [SuperTools openWeChatTransfer];
+        [Common toast:opened ? @"已打开微信输入法·隔空传送" : @"未检测到微信输入法，请先安装"];
     }
 }
 

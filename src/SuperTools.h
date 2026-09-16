@@ -53,6 +53,10 @@
 // 9e. 读取「快捷启动」App 列表（设置面板管理），返回过滤后的数组（元素 {name, scheme}），无则返回 @[]
 + (NSArray<NSDictionary *> *)superscreenshotLaunchApps;
 
+// 9f. 微信输入法「隔空传送」直达：纯 openURL 拉起微信输入法(com.tencent.wetype)，无常驻后台；
+//      返回 YES 表示已拉起（未安装返回 NO，调用方可 toast 提示）
++ (BOOL)openWeChatTransfer;
+
 // 9b. 加手机壳：给截图套一个 iPhone 外壳边框
 + (UIImage *)phoneCase:(UIImage *)image;
 

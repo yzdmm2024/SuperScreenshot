@@ -6,8 +6,13 @@
 	<dict>
 		<key>Bundles</key>
 		<array>
+			<!-- 低功耗 v6.21：去掉全量 "*"。只注入真正需要的进程：
+			     SpringBoard（截图/裁剪/编辑/贴图/设置）、微信和 QQ（长截图自动滚动驱动）。
+			     不再把 dylib 打进每个 App，消除全 App 启动开销与固定内存占用（间接省电）。
+			     若将来新增需要注入其它 App 的功能，再单独补该 bundle。 -->
 			<string>com.apple.springboard</string>
-			<string>*</string>
+			<string>com.tencent.mqq</string>
+			<string>com.tencent.xin</string>
 		</array>
 	</dict>
 </dict>

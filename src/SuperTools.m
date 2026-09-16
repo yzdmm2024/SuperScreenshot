@@ -1409,6 +1409,22 @@ static UIWindow *_floatWin = nil;
     return [[UIApplication sharedApplication] openURL:url];
 }
 
+// v6.21：微信输入法「隔空传送」直达。纯 openURL 拉起 微信输入法(com.tencent.wetype,即「微信键盘」)，
+//        无任何常驻后台 / 定时器，调用即用、用完静默，满足低功耗要求。
+//        scheme 默认 wetype://，可经 XZ_KEY_WXTRANS_SCHEME override（真机若未落在隔空传送页，
+//        用 Filza 打开 微信输入法.app/Info.plist 查 CFBundleURLSchemes 的确切值写回这里）。
++ (BOOL)openWeChatTransfer {
+    NSUserDefaults *d = [[NSUserDefaults alloc] initWithSuiteName:XZ_PREFS_DOMAIN];
+    NSString *scheme = [d stringForKey:XZ_KEY_WXTRANS_SCHEME];
+    if (!scheme || scheme.length == 0) scheme = @"wetype://";
+    if ([scheme rangeOfString:@"://"].location == NSNotFound) scheme = [scheme stringByAppendingString:@"://"];
+    NSURL *url = [NSURL URLWithString:scheme];
+    if (!url) return NO;
+    // 同 doubao：宿主(SpringBoard)未在 LSApplicationQueriesSchemes 声明 wetype，canOpenURL 会误判，
+    //    故直接 openURL 并以返回值判断是否拉起成功。
+    return [[UIApplication sharedApplication] openURL:url];
+}
+
 + (NSArray<NSDictionary *> *)superscreenshotLaunchApps {
     NSUserDefaults *d = [[NSUserDefaults alloc] initWithSuiteName:XZ_PREFS_DOMAIN];
     NSArray *raw = [d arrayForKey:XZ_KEY_LAUNCH_APPS];

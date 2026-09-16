@@ -29,6 +29,9 @@
 
 // v6.20.9：快捷启动 App 列表（NSArray<NSDictionary {name, scheme}>），设置面板「快捷启动」管理，工具栏「启动」按钮读取
 #define XZ_KEY_LAUNCH_APPS      @"LaunchApps"
+// v6.21：微信输入法「隔空传送」直达 scheme（默认 wetype://；可用 Filza 查微信输入法
+//        Info.plist 的 CFBundleURLSchemes 确认真实 scheme 后，在此键 override）
+#define XZ_KEY_WXTRANS_SCHEME   @"WeChatTransfer_Scheme"
 #define XZ_KEY_TRANS_ENABLED    @"Translate_Enabled"
 #define XZ_KEY_TRANS_APPID      @"Translate_APIAppID"
 #define XZ_KEY_TRANS_KEY        @"Translate_APIKey"
