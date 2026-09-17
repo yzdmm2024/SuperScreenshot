@@ -1277,7 +1277,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     XZLocalTranslate= 2,
     XZLocalDraw     = 3,
     XZLocalCode     = 4,
-    XZLocalAIImage  = 20,   // 打开豆包（直接拉起豆包 App 并把裁剪图带进去）—— v6.20.6 由主工具栏补齐，v6.20.8 改为打开豆包
+    XZLocalAIImage  = 20,   // 豆包（直接拉起豆包 App 并把裁剪图带进去）
     XZLocalRotate   = 19,
     XZLocalCopy     = 6,
     XZLocalFloating = 7,
@@ -1289,7 +1289,6 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     XZLocalColorPick= 15,
     XZLocalReset    = 16,
     XZLocalLaunchApp= 21,   // v6.20.9：快捷启动 App（弹层选微信/QQ/闲鱼/自选，秒开）
-    XZLocalWeChatTransfer = 22, // v6.21：微信输入法「隔空传送」直达（低功耗，仅 openURL）
 };
 
 // 构建功能面板视图（给定已定位好的 frame）
@@ -1378,7 +1377,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         @(XZLocalTranslate):@{@"icon":@"translate",                    @"label":@"翻译"},
         @(XZLocalDraw):     @{@"icon":@"pencil.tip",                  @"label":@"画图"},
         @(XZLocalCode):     @{@"icon":@"qrcode.viewfinder",           @"label":@"识码"},
-        @(XZLocalAIImage):  @{@"icon":@"bubble.left",                 @"label":@"打开豆包"},
+        @(XZLocalAIImage):  @{@"icon":@"bubble.left",                 @"label":@"豆包"},
         @(XZLocalRotate):   @{@"icon":@"rotate.right",                @"label":@"旋转"},
         @(XZLocalCopy):     @{@"icon":@"doc.on.doc",                  @"label":@"复制"},
         @(XZLocalFloating): @{@"icon":@"pin",                         @"label":@"贴图"},
@@ -1389,7 +1388,6 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         @(XZLocalColorPick):@{@"icon":@"eyedropper",                  @"label":@"取色"},
         @(XZLocalReset):    @{@"icon":@"arrow.counterclockwise",       @"label":@"还原"},
         @(XZLocalLaunchApp):@{@"icon":@"app.fill",                     @"label":@"启动"},
-        @(XZLocalWeChatTransfer):@{@"icon":@"paperplane.fill",          @"label":@"微信传送"},
     };
 
     // 读「工具栏排序」+ 禁用集合，得到当前应显示的按钮顺序
@@ -1612,8 +1610,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     NSArray<NSNumber *> *defOrder = @[ @(XZLocalOCR), @(XZLocalTranslate), @(XZLocalDraw), @(XZLocalCode),
                                        @(XZLocalAIImage), @(XZLocalRotate), @(XZLocalCopy), @(XZLocalFloating),
                                        @(XZLocalSave), @(XZLocalShare), @(XZLocalPDF),
-                                       @(XZLocalCompress), @(XZLocalColorPick), @(XZLocalReset), @(XZLocalLaunchApp),
-                                       @(XZLocalWeChatTransfer) ];
+                                       @(XZLocalCompress), @(XZLocalColorPick), @(XZLocalReset), @(XZLocalLaunchApp) ];
     NSMutableArray<NSNumber *> *saved = [NSMutableArray array];
     NSString *orderStr = [Common stringPref:XZ_KEY_TB_ORDER default:@""];
     if (orderStr.length) [saved addObjectsFromArray:[orderStr componentsSeparatedByString:@","]];
@@ -1848,10 +1845,6 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     } else if (tag == XZLocalLaunchApp) {
         // v6.20.9：一键秒开微信/QQ/闲鱼等任意 App（弹层选择，图同时入剪贴板可粘贴）
         [self launchLocalAppWithImage:img];
-    } else if (tag == XZLocalWeChatTransfer) {
-        // v6.21：微信输入法「隔空传送」直达。纯 openURL 拉起，无常驻后台、低功耗。
-        BOOL opened = [SuperTools openWeChatTransfer];
-        [Common toast:opened ? @"已打开微信输入法·隔空传送" : @"未检测到微信输入法，请先安装"];
     }
 }
 
