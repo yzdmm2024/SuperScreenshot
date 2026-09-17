@@ -145,6 +145,8 @@ static int SuperScreenshot_LoopKVOContext = 0;
     CGFloat         _localSetW;      // 单排循环：一组按钮总跨度
     BOOL            _rotateLongPressed; // 区分旋转点按(90°)/长按(180°)
     UIImageView     *_previewIV;    // v6.05：左侧预览缩略图（旋转/还原/压缩后实时更新）
+    BOOL            _localPreviewShown;  // v6.20.27：预览默认隐藏，点了旋转才显示
+    CGRect          _lastLocalRect;      // v6.20.27：记住最近一次面板位置，用于旋转时重建
 }
 
 #pragma mark - 单例 / 生命周期
@@ -347,6 +349,7 @@ static int SuperScreenshot_LoopKVOContext = 0;
     _cropImage = nil;
     _cropScreenRect = CGRectZero;
     _localPanel = nil;
+    _localPreviewShown = NO;      // v6.20.27：面板关闭后重置，下次弹出默认隐藏预览
     if (_closeBtn) { [_closeBtn removeFromSuperview]; _closeBtn = nil; }
     if (_panelWin) {
         _panelWin.hidden = YES;
@@ -1367,7 +1370,9 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     CGFloat prevW  = 52.0;                    // 左侧预览缩略图宽
     CGFloat headerH = 26.0;                   // 顶部统计条（已截 N 张 + 历史入口 + 关闭✕）
     CGFloat panelW = scr.size.width - pad * 2;
-    CGFloat areaW  = panelW - closeW - prevW - 16.0;  // 按钮区可用宽（左预览、右关闭、顶统计）
+    // v6.20.27：预览默认隐藏（未显示时不留预览位，按钮占满整行更紧凑）；点了旋转才出现
+    CGFloat prevVisW = _localPreviewShown ? prevW : 0.0;
+    CGFloat areaW  = panelW - closeW - prevVisW - 16.0;  // 按钮区可用宽（左[预览]、右关闭、顶统计）
 
     BOOL singleRow = ([Common intPref:XZ_KEY_TB_LAYOUT default:0] == 1);
 
@@ -1465,22 +1470,25 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     [close addTarget:self action:@selector(onCancel) forControlEvents:UIControlEventTouchUpInside];
     [panel addSubview:close];
 
-    // 左侧预览缩略图：显示当前裁剪图，旋转/还原/压缩后实时更新（让操作看得见）
-    if (!_previewIV) {
-        _previewIV = [[UIImageView alloc] init];
-        _previewIV.contentMode = UIViewContentModeScaleAspectFit;
-        _previewIV.layer.cornerRadius = 6;
-        _previewIV.clipsToBounds = YES;
-        _previewIV.layer.borderWidth = 1;
-        _previewIV.layer.borderColor = [UIColor colorWithWhite:1 alpha:0.25].CGColor;
-        _previewIV.userInteractionEnabled = NO;
-    }
+    // 左侧预览缩略图：v6.20.27 默认隐藏，点了「旋转」才显示（平时面板更紧凑、按钮占满整行）
     CGFloat contentTop = headerH;
-    CGFloat prevH = panelH - contentTop - vPad * 2;
-    _previewIV.frame = CGRectMake(8, contentTop + vPad, prevW, prevH);
-    [panel addSubview:_previewIV];
+    if (_localPreviewShown) {
+        if (!_previewIV) {
+            _previewIV = [[UIImageView alloc] init];
+            _previewIV.contentMode = UIViewContentModeScaleAspectFit;
+            _previewIV.layer.cornerRadius = 6;
+            _previewIV.clipsToBounds = YES;
+            _previewIV.layer.borderWidth = 1;
+            _previewIV.layer.borderColor = [UIColor colorWithWhite:1 alpha:0.25].CGColor;
+            _previewIV.userInteractionEnabled = NO;
+        }
+        CGFloat prevH = panelH - contentTop - vPad * 2;
+        _previewIV.frame = CGRectMake(8, contentTop + vPad, prevW, prevH);
+        [panel addSubview:_previewIV];
+    }
 
-    CGFloat btnAreaX = 8 + prevW + 8;   // 按钮区起点（预览右侧）
+    _lastLocalRect = rect;                      // v6.20.27：记住面板位置，旋转后可重建为带预览布局
+    CGFloat btnAreaX = 8 + prevVisW + 8;   // 按钮区起点（无预览时贴左缘，占满整行）
     if (singleRow) {
         // 单排 + 横向循环滑动（3 组首尾相接，越界无感回绕）—— 保留「单排」设置的原样式
         UIScrollView *sv = [[UIScrollView alloc] initWithFrame:CGRectMake(btnAreaX, contentTop + vPad, areaW, rowH)];
@@ -1557,6 +1565,15 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
 // v6.05：把当前裁剪图刷新到左侧预览缩略图
 - (void)updateLocalPreview {
     if (_previewIV) _previewIV.image = _cropImage;
+}
+
+// v6.20.27：点了旋转才把左侧预览显示出来（之前面板无预览、更紧凑）
+- (void)revealLocalPreview {
+    if (_localPreviewShown) return;
+    _localPreviewShown = YES;
+    if (_lastLocalRect.size.width > 0) {
+        [self buildLocalPanelOnOwnWindowWithRect:_lastLocalRect];  // 重建为带预览布局
+    }
 }
 
 #pragma mark - v6.06：截图统计 + 历史记录
@@ -1672,7 +1689,9 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
 - (void)onLocalRotateLongPress:(UILongPressGestureRecognizer *)g {
     if (g.state == UIGestureRecognizerStateBegan) {
         _rotateLongPressed = YES;
+        [self revealLocalPreview];      // v6.20.27：长按旋转同样显示预览
         [self rotateCropImageBy:M_PI];
+        [self updateLocalPreview];
     }
 }
 
@@ -1819,6 +1838,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     } else if (tag == XZLocalRotate) {
         // 点按 90°；长按 180°（_rotateLongPressed 避免两者叠加）
         if (_rotateLongPressed) { _rotateLongPressed = NO; return; }
+        [self revealLocalPreview];      // v6.20.27：点了旋转才把左侧预览显示出来
         [self rotateCropImageBy:M_PI_2];
         [self updateLocalPreview];      // v6.05：旋转后立刻刷新左侧预览，让用户看到结果
     } else if (tag == XZLocalCopy) {
