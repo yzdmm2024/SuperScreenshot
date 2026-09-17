@@ -1357,7 +1357,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     CGFloat iconS = 16.0;
     CGFloat labelH = 13.0;                    // 「单排」模式兼容：文字行高
     CGFloat rowH  = iconS + labelH + 5.0;     // 「单排」模式行高（原 38）
-    CGFloat capH = 34.0;                      // 胶囊统一高度（贴合图标+文字，留最小触控余量）
+    CGFloat capH = 46.0;                      // 竖排按钮统一高度（图标+文字+上下留白）
     CGFloat capMinW = 40.0;                   // 最小宽下限（仅防极短文字点不到，不再撑大空白）
     CGFloat btnGap = 6.0;                     // 胶囊水平间距（固定）
     CGFloat vRowGap = 6.0;                    // 两行间垂直间距
@@ -1737,20 +1737,26 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     lb.text = spec[@"label"];
     lb.textColor = [UIColor whiteColor];
     lb.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];   // 保持 12pt 不缩字体
-    lb.textAlignment = NSTextAlignmentLeft;
+    lb.textAlignment = NSTextAlignmentCenter;
     lb.numberOfLines = 1;
     [b addSubview:lb];
     [lb sizeToFit];               // 文字自然宽，驱动按钮宽度自适应
 
-    CGFloat sidePad = 6.0;        // 胶囊左右内边距（已收紧，让框贴合内容）
-    CGFloat gap = 4.0;            // 图标与文字间距（已收紧）
-    CGFloat w = sidePad + iconS + gap + lb.bounds.size.width + sidePad;
+    // v6.20.26：竖排（图标在上、文字在下）——横向宽度有限时比横排更紧凑贴合。
+    //   按钮宽 = max(文字宽, 图标宽) + 左右内边距；高由调用方 capH 决定。
+    CGFloat sidePad = 8.0;        // 左右内边距（贴合最宽内容）
+    CGFloat gapV = 2.0;           // 图标与文字垂直间距
+    CGFloat lh = lb.bounds.size.height;                 // 文字行高
+    CGFloat lw = lb.bounds.size.width;                  // 文字自然宽度
+    CGFloat contentW = MAX(lw, iconS);                  // 贴合最宽元素
+    CGFloat w = contentW + sidePad * 2;
     if (w < minW) w = minW;       // 最小宽下限，防文字少时点不到
     b.frame = CGRectMake(0, 0, w, h);
-    iv.frame  = CGRectMake(sidePad, (h - iconS) / 2.0, iconS, iconS);
-    lb.frame  = CGRectMake(sidePad + iconS + gap,
-                           (h - lb.bounds.size.height) / 2.0,
-                           lb.bounds.size.width, lb.bounds.size.height);
+    // 图标+文字（内容块）垂直居中排布
+    CGFloat blockH = iconS + gapV + lh;
+    CGFloat topY = (h - blockH) / 2.0;
+    iv.frame  = CGRectMake((w - iconS) / 2.0, topY, iconS, iconS);
+    lb.frame  = CGRectMake((w - lw) / 2.0, topY + iconS + gapV, lw, lh);
 
     // 旋转按钮支持长按 = 旋转 180°（点按 = 旋转 90°）
     if ([spec[@"tag"] integerValue] == XZLocalRotate) {
