@@ -1353,17 +1353,20 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     if (!_win) return;
     CGRect scr = [UIScreen mainScreen].bounds;
 
-    // v6.20.20：紧凑化排版 —— 字号保持 12pt 不压缩字体，只收紧行高/行距/上下边距；
-    //   列数 5 → 4（16 键正好 4×4 整齐网格），把孤立的「微信传送」并入网格，面板更矮更规整
+    // v6.20.20：横排胶囊按钮 —— 宽度=内容自适应（短文本自动收窄/长文本自动加宽），
+    //   同行高度统一、有最小宽高下限、gap 固定；文字保持 12pt 不压缩字体。
     CGFloat iconS = 16.0;
-    CGFloat labelH = 13.0;                    // 标签行高（承载 12pt 文字，字体不缩）
-    CGFloat rowH  = iconS + labelH + 5.0;     // 单行高 34（原 38）
-    CGFloat rowGap = 2.0;                     // 行距收紧（原 4）
+    CGFloat labelH = 13.0;                    // 「单排」模式兼容：文字行高
+    CGFloat rowH  = iconS + labelH + 5.0;     // 「单排」模式行高（原 38）
+    CGFloat capH = 40.0;                      // 胶囊统一高度（视觉对齐 + 稳定触控区）
+    CGFloat capMinW = 64.0;                   // 胶囊最小宽（文字少也不会小到点不到）
+    CGFloat btnGap = 6.0;                     // 胶囊水平间距（固定）
+    CGFloat vRowGap = 6.0;                    // 两行间垂直间距
     CGFloat vPad  = 5.0;                      // 上下边距（原 7）
     CGFloat pad   = 8.0;
     CGFloat closeW = 36.0;                    // 最右侧红色关闭（明显、一指可点）
     CGFloat prevW  = 52.0;                    // 左侧预览缩略图宽
-    CGFloat headerH = 26.0;                   // 顶部统计条（已截 N 张 + 历史入口 + 关闭✕）原 30
+    CGFloat headerH = 26.0;                   // 顶部统计条（已截 N 张 + 历史入口 + 关闭✕）
     CGFloat panelW = scr.size.width - pad * 2;
     CGFloat areaW  = panelW - closeW - prevW - 16.0;  // 按钮区可用宽（左预览、右关闭、顶统计）
 
@@ -1407,9 +1410,9 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     }
     if (all.count == 0) { [Common toast:@"工具栏为空，请到设置→工具栏排序开启功能"]; [self dismiss]; return; }
 
-    NSInteger kCols = 4;   // v6.20.20：5→4，16 键恰为 4×4 整齐网格，无「微信传送」孤行
-    NSInteger rows = singleRow ? 1 : (NSInteger)ceil((double)all.count / (double)kCols);
-    CGFloat panelH = headerH + vPad * 2 + rowH * rows + rowGap * MAX(0, rows - 1);
+    // v6.20.20：单排=1 行；默认=2 行（横排胶囊 + 横向滑动），面板压到最矮
+    CGFloat bodyH = singleRow ? rowH : (capH * 2 + vRowGap);
+    CGFloat panelH = headerH + vPad * 2 + bodyH;
 
     // 复用 _panelWin：移除旧面板/旧滚动视图
     if (_localPanel) { [_localPanel removeFromSuperview]; _localPanel = nil; }
@@ -1480,24 +1483,23 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     [panel addSubview:_previewIV];
 
     CGFloat btnAreaX = 8 + prevW + 8;   // 按钮区起点（预览右侧）
-    CGFloat bw, gap = 4.0;
     if (singleRow) {
-        // 单排 + 横向循环滑动（3 组首尾相接，越界无感回绕）
+        // 单排 + 横向循环滑动（3 组首尾相接，越界无感回绕）—— 保留「单排」设置的原样式
         UIScrollView *sv = [[UIScrollView alloc] initWithFrame:CGRectMake(btnAreaX, contentTop + vPad, areaW, rowH)];
         sv.showsHorizontalScrollIndicator = NO;
         sv.alwaysBounceHorizontal = YES;
         sv.delegate = self;
         sv.tag = 9902;                 // 本地面板循环滑动标记
         [panel addSubview:sv];
-        bw = 54.0;
-        CGFloat stride = (bw + gap) * (CGFloat)all.count;
+        CGFloat bw = 54.0;
+        CGFloat stride = (bw + btnGap) * (CGFloat)all.count;
         for (int copy = 0; copy < 3; copy++) {
             CGFloat x = (CGFloat)copy * stride + 6.0;
             for (NSDictionary *d in all) {
                 UIButton *b = [self makeLocalButton:d iconSize:iconS labelH:labelH width:bw];
                 b.frame = CGRectMake(x, 0, bw, rowH);
                 [sv addSubview:b];
-                x += bw + gap;
+                x += bw + btnGap;
             }
         }
         sv.contentSize = CGSizeMake(stride * 3.0 + 12.0, rowH);
@@ -1505,15 +1507,32 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         _panelScroll = sv;
         _localSetW = stride;
     } else {
-        // v6.20.20：多排 4 列自动折行（左侧留预览、右侧留关闭），16 键正好排满，无孤行
-        bw = (areaW - gap * (kCols - 1)) / (CGFloat)kCols;
-        if (bw < 54.0) bw = 54.0;     // 保证最小可点 + 4 字标签完整显示
+        // v6.20.20：横排胶囊 + 内容自适应宽度。宽屏下 16 个一键排 2/3 行静态放不下，
+        //   故分两行，放进同一个横向 UIScrollView（两行一起左右滑），面板压到最矮(2 行高)。
+        NSInteger perRow = ((NSInteger)all.count + 1) / 2;   // 前一半第1行、后一半第2行
+        NSMutableArray<UIButton *> *top = [NSMutableArray array];
+        NSMutableArray<UIButton *> *bot = [NSMutableArray array];
         for (NSInteger i = 0; i < (NSInteger)all.count; i++) {
-            NSInteger r = i / kCols, c = i % kCols;
-            UIButton *b = [self makeLocalButton:all[i] iconSize:iconS labelH:labelH width:bw];
-            b.frame = CGRectMake(btnAreaX + c * (bw + gap), contentTop + vPad + r * (rowH + rowGap), bw, rowH);
-            [panel addSubview:b];
+            UIButton *b = [self makeCapsuleButton:all[i] capHeight:capH minWidth:capMinW iconSize:iconS];
+            if (i < perRow) [top addObject:b]; else [bot addObject:b];
         }
+        UIScrollView *sv = [[UIScrollView alloc] initWithFrame:CGRectMake(btnAreaX, contentTop + vPad, areaW, capH * 2 + vRowGap)];
+        sv.showsHorizontalScrollIndicator = NO;
+        sv.bounces = YES;
+        [panel addSubview:sv];
+        CGFloat x0 = 6.0;                 // 内容左留白
+        CGFloat topEnd = x0;
+        for (UIButton *b in top) {
+            b.frame = CGRectMake(topEnd, 0, CGRectGetWidth(b.bounds), capH);
+            topEnd += CGRectGetWidth(b.bounds) + btnGap;
+        }
+        CGFloat botEnd = x0;
+        for (UIButton *b in bot) {
+            b.frame = CGRectMake(botEnd, capH + vRowGap, CGRectGetWidth(b.bounds), capH);
+            botEnd += CGRectGetWidth(b.bounds) + btnGap;
+        }
+        sv.contentSize = CGSizeMake(MAX(topEnd, botEnd) + btnGap, capH * 2 + vRowGap);
+        _panelScroll = sv;
     }
 
     [_panelWin addSubview:_localPanel];
@@ -1675,6 +1694,53 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     lb.lineBreakMode = NSLineBreakByClipping;
     lb.userInteractionEnabled = NO;
     [b addSubview:lb];
+
+    // 旋转按钮支持长按 = 旋转 180°（点按 = 旋转 90°）
+    if ([spec[@"tag"] integerValue] == XZLocalRotate) {
+        UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(onLocalRotateLongPress:)];
+        lp.minimumPressDuration = 0.5;
+        [b addGestureRecognizer:lp];
+    }
+    return b;
+}
+
+// v6.20.20：横排胶囊按钮（图标左 + 文字右），宽度=内容自适应，高度统一、有最小宽下限。
+- (UIButton *)makeCapsuleButton:(NSDictionary *)spec capHeight:(CGFloat)h minWidth:(CGFloat)minW iconSize:(CGFloat)iconS {
+    UIButton *b = [UIButton buttonWithType:UIButtonTypeSystem];
+    b.tag = [spec[@"tag"] integerValue];
+    b.backgroundColor = [UIColor colorWithWhite:1 alpha:0.12];
+    b.layer.cornerRadius = h / 2.0;
+    b.clipsToBounds = YES;
+    [b addTarget:self action:@selector(localToolTapped:) forControlEvents:UIControlEventTouchUpInside];
+    // 按压缩放反馈（与本地工具栏胶囊一致）
+    [b addTarget:self action:@selector(localBtnTouchDown:) forControlEvents:UIControlEventTouchDown];
+    [b addTarget:self action:@selector(localBtnTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
+
+    UIImageView *iv = [[UIImageView alloc] init];
+    iv.image = [Common systemIcon:spec[@"icon"]];
+    if (!iv.image) iv.image = [Common systemIcon:@"circle"];
+    iv.tintColor = [UIColor whiteColor];
+    iv.contentMode = UIViewContentModeScaleAspectFit;
+    [b addSubview:iv];
+
+    UILabel *lb = [[UILabel alloc] initWithFrame:CGRectZero];
+    lb.text = spec[@"label"];
+    lb.textColor = [UIColor whiteColor];
+    lb.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];   // 保持 12pt 不缩字体
+    lb.textAlignment = NSTextAlignmentLeft;
+    lb.numberOfLines = 1;
+    [b addSubview:lb];
+    [lb sizeToFit];               // 文字自然宽，驱动按钮宽度自适应
+
+    CGFloat sidePad = 12.0;       // 胶囊左右内边距（固定）
+    CGFloat gap = 6.0;            // 图标与文字间距
+    CGFloat w = sidePad + iconS + gap + lb.bounds.size.width + sidePad;
+    if (w < minW) w = minW;       // 最小宽下限，防文字少时点不到
+    b.frame = CGRectMake(0, 0, w, h);
+    iv.frame  = CGRectMake(sidePad, (h - iconS) / 2.0, iconS, iconS);
+    lb.frame  = CGRectMake(sidePad + iconS + gap,
+                           (h - lb.bounds.size.height) / 2.0,
+                           lb.bounds.size.width, lb.bounds.size.height);
 
     // 旋转按钮支持长按 = 旋转 180°（点按 = 旋转 90°）
     if ([spec[@"tag"] integerValue] == XZLocalRotate) {
