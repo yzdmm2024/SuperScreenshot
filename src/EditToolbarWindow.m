@@ -225,7 +225,7 @@ static EditToolbarWindow *_shared = nil;
         @(ETBTagTranslate): @{@"icon":@"translate",                   @"label":@"翻译"},
         @(ETBTagDraw):      @{@"icon":@"pencil.tip",                  @"label":@"画图"},
         @(ETBTagCodeScan):  @{@"icon":@"qrcode.viewfinder",           @"label":@"识码"},
-        @(ETBTagAIImage):   @{@"icon":@"bubble.left",                 @"label":@"打开豆包"},
+        @(ETBTagAIImage):   @{@"icon":@"bubble.left",                 @"label":@"豆包"},
         @(ETBTagRotate):    @{@"icon":@"rotate.right",                @"label":@"旋转"},
         @(ETBTagCopy):      @{@"icon":@"doc.on.doc",                  @"label":@"复制"},
         @(ETBTagFloating):  @{@"icon":@"pin",                         @"label":@"贴图"},
