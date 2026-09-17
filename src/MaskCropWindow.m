@@ -1505,8 +1505,9 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         _panelScroll = sv;
         _localSetW = stride;
     } else {
-        // v6.20.20：横排胶囊 + 内容自适应宽度。宽屏下 16 个一键排 2/3 行静态放不下，
-        //   故分两行，放进同一个横向 UIScrollView（两行一起左右滑），面板压到最矮(2 行高)。
+        // v6.20.24：横排胶囊 2 行横向滑动。宽度=内容自适应（按钮框贴合图标+文字）。
+        //   「铺满」：每行内容不足可视宽时，把剩余空白均匀摊到按钮间距填满整行，杜绝
+        //   右侧大片空白；内容超宽则用固定 btnGap 排布并横向滑动。面板压到最矮(2 行高)。
         NSInteger perRow = ((NSInteger)all.count + 1) / 2;   // 前一半第1行、后一半第2行
         NSMutableArray<UIButton *> *top = [NSMutableArray array];
         NSMutableArray<UIButton *> *bot = [NSMutableArray array];
@@ -1518,18 +1519,34 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         sv.showsHorizontalScrollIndicator = NO;
         sv.bounces = YES;
         [panel addSubview:sv];
-        CGFloat x0 = 6.0;                 // 内容左留白
-        CGFloat topEnd = x0;
-        for (UIButton *b in top) {
-            b.frame = CGRectMake(topEnd, 0, CGRectGetWidth(b.bounds), capH);
-            topEnd += CGRectGetWidth(b.bounds) + btnGap;
+
+        NSArray<UIButton *> *rowBtns[]  = { top, bot };
+        CGFloat            rowY[]      = { 0, capH + vRowGap };
+        CGFloat placedMax = btnGap;               // 两行里最宽一行的内容总宽
+        for (int r = 0; r < 2; r++) {
+            NSArray<UIButton *> *btns = rowBtns[r];
+            NSInteger n = (NSInteger)btns.count;
+            if (n == 0) continue;
+            CGFloat sumW = 0;
+            for (UIButton *b in btns) sumW += CGRectGetWidth(b.bounds);
+            // 铺满策略：可用宽 = areaW - 左右各 btnGap 留白
+            CGFloat usable = areaW - btnGap * 2;
+            CGFloat gapReal = btnGap;
+            if (n == 1) {
+                gapReal = 0;                       // 单按钮保持贴合，不拉伸
+            } else if (sumW + btnGap * (n - 1) <= usable) {
+                gapReal = (usable - sumW) / (CGFloat)(n - 1);
+            }
+            CGFloat x = btnGap;
+            for (NSInteger i = 0; i < n; i++) {
+                UIButton *b = btns[i];
+                b.frame = CGRectMake(x, rowY[r], CGRectGetWidth(b.bounds), capH);
+                [sv addSubview:b];
+                x += CGRectGetWidth(b.bounds) + (i < n - 1 ? gapReal : 0);
+            }
+            placedMax = MAX(placedMax, sumW + gapReal * (n > 1 ? (n - 1) : 0) + btnGap);
         }
-        CGFloat botEnd = x0;
-        for (UIButton *b in bot) {
-            b.frame = CGRectMake(botEnd, capH + vRowGap, CGRectGetWidth(b.bounds), capH);
-            botEnd += CGRectGetWidth(b.bounds) + btnGap;
-        }
-        sv.contentSize = CGSizeMake(MAX(topEnd, botEnd) + btnGap, capH * 2 + vRowGap);
+        sv.contentSize = CGSizeMake(MAX(placedMax, areaW), capH * 2 + vRowGap);
         _panelScroll = sv;
     }
 
