@@ -20,6 +20,9 @@
 #import "Common.h"
 #import "AskAIEngine.h"   // v5.17：大模型OCR（OpenAI 兼容，AI Studio/Doubao 等免费）
 #import "ImageUtils.h"
+#import "EditToolbarWindow.h"   // v6.20.20：分享/打开 App 时统一收起截图面板
+#import "MaskCropWindow.h"
+#import "HistoryWindow.h"
 
 // 私有方法声明（PaddleOCR 异步任务协议辅助）
 @interface SuperTools ()
@@ -28,6 +31,10 @@
 + (void)_ppocrFetchResult:(NSString *)jsonl scaleX:(CGFloat)sx scaleY:(CGFloat)sy completion:(void (^)(NSArray<NSDictionary *> *, NSString *))completion;
 + (void)_ppocrSyncWithURL:(NSURL *)u token:(NSString *)token jpeg:(NSData *)jpeg scaleX:(CGFloat)sx scaleY:(CGFloat)sy completion:(void (^)(NSArray<NSDictionary *> *, NSString *))completion;
 + (CGRect)_superscreenshotRectFromPaddlePoly:(id)poly;
+// v6.20.20 分享相关私有方法
++ (NSURL *)sharedTemporaryPNGForImage:(UIImage *)image;
++ (void)dismissScreenshotPanels;
++ (void)_showShareSheetWithItems:(NSArray *)items fromWindow:(UIWindow *)win cleanupURL:(NSURL *)cleanupURL;
 @end
 
 #import <Vision/Vision.h>
@@ -1439,15 +1446,63 @@ static UIWindow *_floatWin = nil;
 
 static UIWindow *_shareWin = nil;
 
-+ (void)share:(UIImage *)image fromWindow:(UIWindow *)win {
-    if (!image) return;
-    UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[image]
+// v6.20.20【截图分享不全 / 电脑打开出错 根因修复】：
+//   旧实现直接把「内存 UIImage」喂给 UIActivityViewController。插件宿主是 SpringBoard，
+//   iOS 对外分享是【异步】编码的（PNG/JPEG），用户点选目标 App 的瞬间就会起跳转，
+//   跳转前后 activity item provider 常被取消 → 目标 App / 导出到电脑收到被截断、
+//   只写了一半的损坏图片 —— 正是「照片不全 / 电脑上打开是坏的」。
+//   修法：先把 UIImage 完整落盘为 PNG（原子写入，保证一整个完整文件），
+//   再分享这份稳定文件的 URL，接收方拿到的就是全量原图。
++ (NSURL *)sharedTemporaryPNGForImage:(UIImage *)image {
+    if (!image || !image.CGImage) return nil;
+    NSData *png = UIImagePNGRepresentation(image);
+    if (!png || !png.length) return nil;
+    NSString *name = [NSString stringWithFormat:@"xzs_%.0f.png",
+                      [[NSDate date] timeIntervalSince1970] * 1000.0];
+    NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent:name];
+    return ([png writeToFile:path atomically:YES]) ? [NSURL fileURLWithPath:path] : nil;
+}
+
+// v6.20.20【面板挡目标 App 根因修复】：
+//   分享 / 打开 App 时把当前截图相关面板（窗口B 编辑工具栏、窗口A 局部工具栏、
+//   截图历史查看器）一并收起，否则跳转进目标 App 后工具栏还浮在最上面，
+//   目标界面点不到（“面板还在，不好选择”）。
++ (void)dismissScreenshotPanels {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        @try { [EditToolbarWindow dismiss]; } @catch (NSException *e) {}
+        @try {
+            MaskCropWindow *mc = [MaskCropWindow sharedInstance];
+            if (mc && [MaskCropWindow isShowing]) [mc dismiss];
+        } @catch (NSException *e) {}
+        @try { [HistoryWindow dismiss]; } @catch (NSException *e) {}
+    });
+}
+
+// 统一分享弹层：item 可为 UIImage 或文件 NSURL。UIImage 会先完整落盘 PNG 再分享。
++ (void)presentShareForItem:(id)item fromWindow:(UIWindow *)win {
+    if (!item) return;
+    [self dismissScreenshotPanels];   // 分享前先收起面板，别再挡住要打开的目标 App
+
+    if (![item isKindOfClass:[UIImage class]]) {
+        [self _showShareSheetWithItems:@[item] fromWindow:win cleanupURL:nil];
+        return;
+    }
+    // 大图编码较费时，放后台线程写文件，避免 SpringBoard 卡死（watchdog）
+    UIImage *img = item;
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        NSURL *tempURL = [self sharedTemporaryPNGForImage:img];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self _showShareSheetWithItems:@[(tempURL ?: (id)img)] fromWindow:win cleanupURL:tempURL];
+        });
+    });
+}
+
++ (void)_showShareSheetWithItems:(NSArray *)items fromWindow:(UIWindow *)win cleanupURL:(NSURL *)cleanupURL {
+    UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:items
                                                                      applicationActivities:nil];
-    // v5.7：分享面板用独立「顶层窗口」弹出（windowLevel 高于编辑/截图工具栏），
-    //        工具栏不再压在分享面板之上，点分享后功能菜单主动避让。
     if (_shareWin) { _shareWin.hidden = YES; _shareWin = nil; }
     UIWindow *sheetWin = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    sheetWin.windowLevel = UIWindowLevelAlert + 400;   // 高于编辑/截图工具栏(Alert+200)
+    sheetWin.windowLevel = UIWindowLevelAlert + 400;   // 高于编辑/截图工具栏(Alert-10≈1990)
     sheetWin.backgroundColor = [UIColor clearColor];
     if (@available(iOS 13.0, *)) sheetWin.windowScene = [Common activeWindowScene];
     UIViewController *host = [[UIViewController alloc] init];
@@ -1457,16 +1512,23 @@ static UIWindow *_shareWin = nil;
     _shareWin = sheetWin;
 
     if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
-        avc.popoverPresentationController.sourceView = win ?: sheetWin;
-        avc.popoverPresentationController.sourceRect = CGRectMake((win ? win.bounds.size.width : sheetWin.bounds.size.width) / 2,
-                                                                  (win ? win.bounds.size.height : sheetWin.bounds.size.height) / 2, 0, 0);
+        // 分享后源窗口已收起，统一锚到弹层自身的 host 视图中心
+        avc.popoverPresentationController.sourceView = host.view;
+        avc.popoverPresentationController.sourceRect = CGRectMake(CGRectGetMidX(host.view.bounds),
+                                                                  CGRectGetMidY(host.view.bounds), 0, 0);
     }
     avc.completionWithItemsHandler = ^(UIActivityType type, BOOL completed, NSArray *items, NSError *err) {
         _shareWin.hidden = YES;
         _shareWin.rootViewController = nil;
         _shareWin = nil;
+        if (cleanupURL) [[NSFileManager defaultManager] removeItemAtURL:cleanupURL error:nil];   // 清理临时图
     };
     [host presentViewController:avc animated:YES completion:nil];
+}
+
++ (void)share:(UIImage *)image fromWindow:(UIWindow *)win {
+    if (!image) return;
+    [self presentShareForItem:image fromWindow:win];
 }
 
 #pragma mark - 9b. 加手机壳

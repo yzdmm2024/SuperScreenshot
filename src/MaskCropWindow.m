@@ -1348,21 +1348,22 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
 //     与 EditToolbarWindow 用同一套 tag 值，故「工具栏排序」设置对它直接生效。
 //     （「加壳」已移出局部工具栏 —— 改到「设置→手机壳库」，仅对「正常截图」生效。）
 //   · 左侧常驻一张当前裁剪图预览缩略图，旋转/还原/压缩后实时刷新，让操作看得见。
-//   · 单排=横向循环滑动；双排=每行 5 个自动折行。最右侧固定一个红色 X 关闭按钮。
+//   · 单排=横向循环滑动；多排=每行 4 个自动折行（16 键 4×4 排满无孤行）。最右侧红色 X 关闭按钮。
 - (void)buildLocalPanelOnOwnWindowWithRect:(CGRect)rect {
     if (!_win) return;
     CGRect scr = [UIScreen mainScreen].bounds;
 
-    // v6.06：横向间距收紧（更紧凑），但文字不再被压缩——字号回到 12，按钮最小 54 保证 4 字标签完整显示
-    CGFloat iconS = 18.0;
-    CGFloat labelH = 13.0;                    // 标签行高（承载 12pt 文字）
-    CGFloat rowH  = iconS + labelH + 7.0;     // 单行高
-    CGFloat rowGap = 4.0;                     // 横向间距收紧
-    CGFloat vPad  = 7.0;
+    // v6.20.20：紧凑化排版 —— 字号保持 12pt 不压缩字体，只收紧行高/行距/上下边距；
+    //   列数 5 → 4（16 键正好 4×4 整齐网格），把孤立的「微信传送」并入网格，面板更矮更规整
+    CGFloat iconS = 16.0;
+    CGFloat labelH = 13.0;                    // 标签行高（承载 12pt 文字，字体不缩）
+    CGFloat rowH  = iconS + labelH + 5.0;     // 单行高 34（原 38）
+    CGFloat rowGap = 2.0;                     // 行距收紧（原 4）
+    CGFloat vPad  = 5.0;                      // 上下边距（原 7）
     CGFloat pad   = 8.0;
     CGFloat closeW = 36.0;                    // 最右侧红色关闭（明显、一指可点）
     CGFloat prevW  = 52.0;                    // 左侧预览缩略图宽
-    CGFloat headerH = 30.0;                   // 顶部统计条（已截 N 张 + 历史入口 + 关闭✕）
+    CGFloat headerH = 26.0;                   // 顶部统计条（已截 N 张 + 历史入口 + 关闭✕）原 30
     CGFloat panelW = scr.size.width - pad * 2;
     CGFloat areaW  = panelW - closeW - prevW - 16.0;  // 按钮区可用宽（左预览、右关闭、顶统计）
 
@@ -1406,7 +1407,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     }
     if (all.count == 0) { [Common toast:@"工具栏为空，请到设置→工具栏排序开启功能"]; [self dismiss]; return; }
 
-    NSInteger kCols = 5;
+    NSInteger kCols = 4;   // v6.20.20：5→4，16 键恰为 4×4 整齐网格，无「微信传送」孤行
     NSInteger rows = singleRow ? 1 : (NSInteger)ceil((double)all.count / (double)kCols);
     CGFloat panelH = headerH + vPad * 2 + rowH * rows + rowGap * MAX(0, rows - 1);
 
@@ -1504,7 +1505,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         _panelScroll = sv;
         _localSetW = stride;
     } else {
-        // 双排：每行 5 个自动折行（左侧留预览、右侧留关闭）
+        // v6.20.20：多排 4 列自动折行（左侧留预览、右侧留关闭），16 键正好排满，无孤行
         bw = (areaW - gap * (kCols - 1)) / (CGFloat)kCols;
         if (bw < 54.0) bw = 54.0;     // 保证最小可点 + 4 字标签完整显示
         for (NSInteger i = 0; i < (NSInteger)all.count; i++) {
@@ -1652,8 +1653,11 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     b.backgroundColor = [UIColor colorWithWhite:1 alpha:0.12];
     b.layer.cornerRadius = 9;
     [b addTarget:self action:@selector(localToolTapped:) forControlEvents:UIControlEventTouchUpInside];
+    // v6.20.20：按压缩放反馈（更爽快的触感）
+    [b addTarget:self action:@selector(localBtnTouchDown:) forControlEvents:UIControlEventTouchDown];
+    [b addTarget:self action:@selector(localBtnTouchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
 
-    UIImageView *iv = [[UIImageView alloc] initWithFrame:CGRectMake((bw - iconS) / 2, 6, iconS, iconS)];
+    UIImageView *iv = [[UIImageView alloc] initWithFrame:CGRectMake((bw - iconS) / 2, 4, iconS, iconS)];
     iv.image = [Common systemIcon:spec[@"icon"]];
     if (!iv.image) iv.image = [Common systemIcon:@"circle"];
     iv.tintColor = [UIColor whiteColor];
@@ -1661,7 +1665,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     iv.userInteractionEnabled = NO;
     [b addSubview:iv];
 
-    UILabel *lb = [[UILabel alloc] initWithFrame:CGRectMake(0, 6 + iconS + 1, bw, labelH)];
+    UILabel *lb = [[UILabel alloc] initWithFrame:CGRectMake(0, 4 + iconS, bw, labelH)];
     lb.text = spec[@"label"];
     lb.textColor = [UIColor whiteColor];
     lb.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];   // v6.06：回到 12pt，默认名不再被压缩
@@ -1679,6 +1683,18 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         [b addGestureRecognizer:lp];
     }
     return b;
+}
+
+// v6.20.20：本地工具栏按压缩放反馈
+- (void)localBtnTouchDown:(UIButton *)b {
+    [UIView animateWithDuration:0.12 animations:^{
+        b.transform = CGAffineTransformMakeScale(0.93, 0.93);
+    }];
+}
+- (void)localBtnTouchUp:(UIButton *)b {
+    [UIView animateWithDuration:0.15 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+        b.transform = CGAffineTransformIdentity;
+    } completion:nil];
 }
 
 // 面板动作分发（作用于 _cropImage）
@@ -1714,8 +1730,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
             [Common toast:@"已打开豆包，截图已复制到剪贴板，长按输入框可粘贴"];
             [self dismiss];
         } else {
-            UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[img] applicationActivities:nil];
-            [Common present:avc fromWindow:_win];
+            [SuperTools presentShareForItem:img fromWindow:_win];
             [Common toast:@"未检测到豆包，已用系统分享，请选择豆包"];
             [self dismiss];
         }
@@ -1746,10 +1761,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         [self recordSnap:img];
         NSString *p = [SuperTools exportPDF:img];
         if (p) {
-            NSURL *url = [NSURL fileURLWithPath:p];
-            UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[url]
-                                                                             applicationActivities:nil];
-            [Common present:avc fromWindow:_win];
+            [SuperTools presentShareForItem:[NSURL fileURLWithPath:p] fromWindow:_win];
         } else { [Common toast:@"导出失败"]; }
     } else if (tag == XZLocalCompress) {
         NSData *before = UIImagePNGRepresentation(img);
@@ -1789,8 +1801,7 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
         if (opened) {
             [Common toast:[NSString stringWithFormat:@"已打开%@，截图已复制到剪贴板，长按输入框可粘贴", nm]];
         } else {
-            UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[img] applicationActivities:nil];
-            [Common present:avc fromWindow:_win];
+            [SuperTools presentShareForItem:img fromWindow:_win];
             [Common toast:[NSString stringWithFormat:@"未检测到%@，已用系统分享，请选择%@", nm, nm]];
         }
         [self dismiss];

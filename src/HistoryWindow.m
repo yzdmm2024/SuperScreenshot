@@ -4,6 +4,7 @@
 //
 #import "HistoryWindow.h"
 #import "Common.h"
+#import "SuperTools.h"
 #import <objc/runtime.h>   // v6.06：objc_setAssociatedObject / OBJC_ASSOCIATION_RETAIN
 
 @interface HistoryWindow ()
@@ -184,11 +185,8 @@
     NSString *path = objc_getAssociatedObject(self.viewer, "superscreenshot_path");
     if (!path) return;
     if (sender.tag == 1) {
-        // 分享
-        NSURL *url = [NSURL fileURLWithPath:path];
-        UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[url]
-                                                                         applicationActivities:nil];
-        [Common present:avc fromWindow:self.window];
+        // 分享（v6.20.20：走统一分享入口，分享完自动收起查看器，不再挡目标 App）
+        [SuperTools presentShareForItem:[NSURL fileURLWithPath:path] fromWindow:self.window];
     } else {
         // 删除
         [[NSFileManager defaultManager] removeItemAtPath:path error:nil];

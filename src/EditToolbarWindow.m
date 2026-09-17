@@ -393,11 +393,11 @@ static EditToolbarWindow *_shared = nil;
         // v6.20.8：改为直接拉起「豆包」App 并把截图带进去（不再应用内发 API 对话）
         BOOL opened = [SuperTools openDoubaoWithImage:img];
         if (opened) {
+            [EditToolbarWindow dismiss];   // v6.20.20：收起面板，别挡住已打开的豆包
             [Common toast:@"已打开豆包，截图已复制到剪贴板，长按输入框可粘贴"];
         } else {
             // 豆包未安装：回退系统分享面板（选豆包即带图）
-            UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[img] applicationActivities:nil];
-            [Common present:avc fromWindow:_win];
+            [SuperTools presentShareForItem:img fromWindow:_win];
             [Common toast:@"未检测到豆包，已用系统分享，请选择豆包"];
         }
     } else if (tag == ETBTagRotate) {
@@ -428,10 +428,7 @@ static EditToolbarWindow *_shared = nil;
     } else if (tag == ETBTagPDF) {       // v6.05：加壳移出手动按钮，改由「手机壳库」设置对正常截图自动套壳
         NSString *p = [SuperTools exportPDF:img];
         if (p) {
-            NSURL *url = [NSURL fileURLWithPath:p];
-            UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[url]
-                                                                             applicationActivities:nil];
-            [Common present:avc fromWindow:_win];
+            [SuperTools presentShareForItem:[NSURL fileURLWithPath:p] fromWindow:_win];
         } else {
             [Common toast:@"导出失败"];
         }
@@ -491,10 +488,10 @@ static EditToolbarWindow *_shared = nil;
 - (void)_launchResult:(BOOL)opened app:(NSDictionary *)a {
     NSString *nm = a[@"name"] ?: @"App";
     if (opened) {
+        [EditToolbarWindow dismiss];   // v6.20.20：收起面板，别挡住已打开的 App
         [Common toast:[NSString stringWithFormat:@"已打开%@，截图已复制到剪贴板，长按输入框可粘贴", nm]];
     } else {
-        UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[_imageView.image] applicationActivities:nil];
-        [Common present:avc fromWindow:_win];
+        [SuperTools presentShareForItem:_imageView.image fromWindow:_win];
         [Common toast:[NSString stringWithFormat:@"未检测到%@，已用系统分享，请选择%@", nm, nm]];
     }
 }

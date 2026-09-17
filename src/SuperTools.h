@@ -43,6 +43,10 @@
 // 9. 分享：原生 UIActivityViewController
 + (void)share:(UIImage *)image fromWindow:(UIWindow *)win;
 
+// 9s. 统一分享：item 可为 UIImage 或文件 NSURL。自动把内存 UIImage 先完整落盘 PNG 再分享
+//    （修复目标 App / 电脑收到截断损坏图），并收起当前截图面板（防止面板挡住将打开的目标 App）
++ (void)presentShareForItem:(id)item fromWindow:(UIWindow *)win;
+
 // 9c. 打开豆包：把图写入剪贴板并直接 Deep Link 拉起豆包 App；返回 YES 表示已拉起（未安装返回 NO，调用方可回退系统分享）
 + (BOOL)openDoubaoWithImage:(UIImage *)image;
 
