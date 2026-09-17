@@ -1357,8 +1357,8 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     CGFloat iconS = 16.0;
     CGFloat labelH = 13.0;                    // 「单排」模式兼容：文字行高
     CGFloat rowH  = iconS + labelH + 5.0;     // 「单排」模式行高（原 38）
-    CGFloat capH = 40.0;                      // 胶囊统一高度（视觉对齐 + 稳定触控区）
-    CGFloat capMinW = 64.0;                   // 胶囊最小宽（文字少也不会小到点不到）
+    CGFloat capH = 34.0;                      // 胶囊统一高度（贴合图标+文字，留最小触控余量）
+    CGFloat capMinW = 40.0;                   // 最小宽下限（仅防极短文字点不到，不再撑大空白）
     CGFloat btnGap = 6.0;                     // 胶囊水平间距（固定）
     CGFloat vRowGap = 6.0;                    // 两行间垂直间距
     CGFloat vPad  = 5.0;                      // 上下边距（原 7）
@@ -1522,29 +1522,25 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
 
         NSArray<UIButton *> *rowBtns[]  = { top, bot };
         CGFloat            rowY[]      = { 0, capH + vRowGap };
-        CGFloat placedMax = btnGap;               // 两行里最宽一行的内容总宽
+        CGFloat placedMax = 0;                // 两行里最宽一行的内容总宽
         for (int r = 0; r < 2; r++) {
             NSArray<UIButton *> *btns = rowBtns[r];
             NSInteger n = (NSInteger)btns.count;
             if (n == 0) continue;
-            CGFloat sumW = 0;
-            for (UIButton *b in btns) sumW += CGRectGetWidth(b.bounds);
-            // 铺满策略：可用宽 = areaW - 左右各 btnGap 留白
-            CGFloat usable = areaW - btnGap * 2;
-            CGFloat gapReal = btnGap;
-            if (n == 1) {
-                gapReal = 0;                       // 单按钮保持贴合，不拉伸
-            } else if (sumW + btnGap * (n - 1) <= usable) {
-                gapReal = (usable - sumW) / (CGFloat)(n - 1);
-            }
-            CGFloat x = btnGap;
+            // 固定小间距（不再把剩余空白摊到间距，杜绝「按钮之间大片空隙」），整行居中。
+            CGFloat rowContentW = 0;
+            for (UIButton *b in btns) rowContentW += CGRectGetWidth(b.bounds);
+            rowContentW += btnGap * (CGFloat)(n - 1);
+            CGFloat startX = (areaW - rowContentW) / 2.0;   // 居中，左右对称
+            if (startX < btnGap) startX = btnGap;           // 内容超宽：回贴左缘并横向滑动
+            CGFloat x = startX;
             for (NSInteger i = 0; i < n; i++) {
                 UIButton *b = btns[i];
                 b.frame = CGRectMake(x, rowY[r], CGRectGetWidth(b.bounds), capH);
                 [sv addSubview:b];
-                x += CGRectGetWidth(b.bounds) + (i < n - 1 ? gapReal : 0);
+                x += CGRectGetWidth(b.bounds) + (i < n - 1 ? btnGap : 0);
             }
-            placedMax = MAX(placedMax, sumW + gapReal * (n > 1 ? (n - 1) : 0) + btnGap);
+            placedMax = MAX(placedMax, rowContentW);
         }
         sv.contentSize = CGSizeMake(MAX(placedMax, areaW), capH * 2 + vRowGap);
         _panelScroll = sv;
@@ -1746,8 +1742,8 @@ typedef NS_ENUM(NSInteger, XZLocalTag) {
     [b addSubview:lb];
     [lb sizeToFit];               // 文字自然宽，驱动按钮宽度自适应
 
-    CGFloat sidePad = 12.0;       // 胶囊左右内边距（固定）
-    CGFloat gap = 6.0;            // 图标与文字间距
+    CGFloat sidePad = 6.0;        // 胶囊左右内边距（已收紧，让框贴合内容）
+    CGFloat gap = 4.0;            // 图标与文字间距（已收紧）
     CGFloat w = sidePad + iconS + gap + lb.bounds.size.width + sidePad;
     if (w < minW) w = minW;       // 最小宽下限，防文字少时点不到
     b.frame = CGRectMake(0, 0, w, h);
