@@ -111,6 +111,11 @@ static UILabel *_xzToastLabel = nil;
         UILabel *l = [[UILabel alloc] initWithFrame:CGRectZero];
         l.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
         l.numberOfLines = 2;
+        // v6.20.20：加「贴合文字的灰色半透明背景 + 圆角」，白字印在灰底上，浅色/深色壁纸都清楚；
+        //        背景只包住文字区，不再占满整行。
+        l.backgroundColor = [UIColor colorWithWhite:0.18 alpha:0.85];
+        l.layer.cornerRadius = h / 2;
+        l.layer.masksToBounds = YES;
         // 文字阴影（柔和）：UILabel 无 shadowRadius 属性（那是 CALayer 的），直接赋值会编译失败；
         //        改用 NSAttributedString + NSShadow(blurRadius) 实现真正的柔和阴影，
         //        浅色/深色壁纸下都压得住字。
